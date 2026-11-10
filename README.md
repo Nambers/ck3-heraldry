@@ -52,6 +52,7 @@ pnpm build    # 构建静态站到 dist/
 | [docs/design.md](docs/design.md) | 数据流、题库、生成器、组合、排版检查 |
 | [docs/ck3-format.md](docs/ck3-format.md) | CK3 纹章代码格式和进游戏验证清单 |
 | [docs/roadmap.md](docs/roadmap.md) | 路线图 |
+| [docs/roll-gaps.md](docs/roll-gaps.md) | 对照中世纪纹章卷查出的缺口和优先级 |
 
 ## 许可
 

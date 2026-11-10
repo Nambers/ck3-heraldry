@@ -524,11 +524,12 @@ export const designerView =
   });
   // start over; pushState (not replace) so the browser's Back button restores the old answers
   reset.addEventListener("click", () => {
-    answers = { ...d.defaults };
-    shown = "";
-    lastFragment.delete(d.id);
+    answers = { ...(d.blank ?? d.defaults) };
+    // the blank answers go into the URL too (empty when they are the defaults), so a reload keeps them
+    shown = d.encode(answers);
+    lastFragment.set(d.id, shown);
     d.form.reset?.();
-    if (fragment()) history.pushState(null, "", location.search + "#");
+    if (fragment() !== shown) history.pushState(null, "", location.search + "#" + shown);
     render();
     window.scrollTo({ top: 0 });
   });

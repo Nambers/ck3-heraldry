@@ -85,7 +85,7 @@ ${tinctureTable()}
   <li>家族名决定默认的几何图形、分割方式和线条，让不同存档的结果不一样。</li>
   <li>图案不互相重叠，不压到盾头、角区、几何图形上，也不被盾边切掉；每次改动都用排版检查跑几千组答案。</li>
   <li>区分标记放不下时宁可放弃，也不叠在别的图案上。</li>
-  <li>候选最多 12 个，按"放弃的愿望少 → 风格偏好 → 排法顺序"排序；恩赐纹章最多两个，优先家族纹章最简单的。</li>
+  <li>候选最多 16 个，按"放弃的愿望少 → 风格偏好 → 排法顺序"排序；恩赐纹章最多两个，优先家族纹章最简单的。</li>
   <li>元素对照表里标"自动"的部分纯属装饰，没有含义。</li>
 </ul>
 
@@ -145,7 +145,7 @@ ${tinctureTable()}
   <li>The family name picks the default ordinary, division and line, so different games get different results.</li>
   <li>Charges never overlap each other, never lie on a chief, canton or ordinary they do not belong to, and are never cut off by the edge; a layout check runs thousands of answer sets after every change.</li>
   <li>When there is no room for a cadency mark it is dropped rather than laid over something else.</li>
-  <li>At most 12 layouts, ordered by fewest dropped wishes, then style preference, then layout order; at most two grants, preferring the simplest family arms.</li>
+  <li>At most 16 layouts, ordered by fewest dropped wishes, then style preference, then layout order; at most two grants, preferring the simplest family arms.</li>
   <li>Elements marked "Auto" in the "What it stands for" table are decoration only.</li>
 </ul>
 

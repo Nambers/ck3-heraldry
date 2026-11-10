@@ -210,6 +210,18 @@
       "none": "The chosen charges have no other colours.",
       "auto": "Auto",
       "colour": "Colour {n}"
+    },
+    "geom": {
+      "title": "Geometry and lines",
+      "mech": "Looks only, with no meaning. By default the family name decides, so a name always gives the same result; choose here instead. Semé follows how often the rolls of arms use each (crosslets most, then billets and roundels); fleurs-de-lis only when chosen. A line is used only where vanilla CK3 has a texture for it; elsewhere the edge stays straight",
+      "auto": "By family name",
+      "plain": "Straight",
+      "ord": "Ordinary",
+      "div": "Division",
+      "var": "Stripes and chequers",
+      "fur": "Fur",
+      "line": "Line",
+      "semy": "Semé"
     }
   },
   "fam": {
@@ -550,7 +562,13 @@
     "lozengy": "lozengy",
     "lozengy_bend": "lozengy in bend",
     "barry10": "barry of ten",
-    "barry_indented": "barry indented"
+    "barry_indented": "barry indented",
+    "vairy": "vairy",
+    "fretty": "fretty",
+    "semy_cross_crosslet": "crusilly",
+    "semy_billet": "billetty",
+    "semy_roundel": "semé of roundels",
+    "semy_fleur": "semé-de-lis"
   },
   "ord": {
     "fess": "fess",
@@ -589,7 +607,9 @@
     "threePale": "three {a} in pale",
     "threeFess": "three {a} in fess",
     "threeBend": "three {a} in bend",
-    "six": "six {a}, three, two and one"
+    "six": "six {a}, three, two and one",
+    "fieldOrdinary": "{d} field, a {o}",
+    "fieldCharge": "{d} field, {a} in the centre"
   },
   "place": {
     "augmentation": "a canton of augmentation of {r}",
@@ -633,7 +653,9 @@
       "plain": "{t} field",
       "ermine": "ermine field",
       "semy": "{t} field strewn with {c}",
-      "div": "{d}, {a} and {b}"
+      "div": "{d}, {a} and {b}",
+      "vair": "vair field",
+      "fretty": "{a} field fretty {b}"
     },
     "ordinary": "a {t} {o}",
     "pallets": "four {t} pallets",
@@ -961,7 +983,9 @@
     "three_pale": "Three in pale",
     "three_fess": "Three in fess",
     "three_bend": "Three in bend",
-    "six": "Six, three, two and one"
+    "six": "Six, three, two and one",
+    "fieldOrdinary": "{d} with a {o}",
+    "fieldCharge": "{d} with a charge"
   },
   "legend": {
     "what": {
@@ -1015,7 +1039,8 @@
         "baton": "illegitimate line"
       },
       "pilgrimage_rome": "pilgrimage to Rome",
-      "pilgrimage_jerusalem": "pilgrimage to Jerusalem"
+      "pilgrimage_jerusalem": "pilgrimage to Jerusalem",
+      "geometryChosen": "geometry of your choosing, no meaning"
     }
   },
   "line": {
@@ -1023,6 +1048,7 @@
     "indented": "indented",
     "dancetty": "dancetty",
     "embattled": "embattled",
-    "nebuly": "nebuly"
+    "nebuly": "nebuly",
+    "fusilly": "fusilly"
   }
 }

@@ -5,7 +5,7 @@ import { CHARGES } from "../charges.ts";
 import type { Brisure } from "../heraldry/ast.ts";
 import { TINCTURES, isMetal, type Tincture } from "../heraldry/tincture.ts";
 import { RANKS, REALM_IDS, canHold, type Rank } from "../realms.ts";
-import { DEEDS, PARTS, type Part } from "./questions.ts";
+import { DEEDS, GEOM, GEOM_KEYS, PARTS, type GeomKey, type Part } from "./questions.ts";
 
 export type Deed = (typeof DEEDS)[number];
 export type Style = "auto" | "simple" | "ordinary" | "divided" | "patterned";
@@ -39,6 +39,8 @@ export interface Answers {
   layout: string;
   /** the player's detail colours, e.g. "crined:argent,armed:azure" (see parseParts); empty = all automatic */
   parts: string;
+  /** the player's own geometry instead of the family name's, e.g. "ord:fess,line:engrailed" (see parseGeom); empty = by name */
+  geom: string;
 }
 
 export const DEFAULT_ANSWERS: Answers = {
@@ -58,7 +60,11 @@ export const DEFAULT_ANSWERS: Answers = {
   free: false,
   layout: "",
   parts: "",
+  geom: "",
 };
+
+/** after "start over": no charge chosen (the year and the colours always have a value) */
+export const BLANK_ANSWERS: Answers = { ...DEFAULT_ANSWERS, emblem: "none", origin: "none" };
 
 /** every legal field/charge pair: one metal (or ermine), one colour */
 export const PALETTES: [Tincture, Tincture][] = [
@@ -77,7 +83,7 @@ export const ALL_PALETTES: [Tincture, Tincture][] = [
 ];
 
 const KEYS: Record<keyof Answers, string> = {
-  name: "n", year: "y", liege: "l", origin: "o", emblem: "e", faith: "f", deed: "d", claim: "c", rank: "r", titles: "t", cadency: "b", style: "s", palette: "p", free: "x", layout: "k", parts: "h",
+  name: "n", year: "y", liege: "l", origin: "o", emblem: "e", faith: "f", deed: "d", claim: "c", rank: "r", titles: "t", cadency: "b", style: "s", palette: "p", free: "x", layout: "k", parts: "h", geom: "g",
 };
 
 export const MAX_TITLES = 3;
@@ -91,6 +97,21 @@ export function parseParts(s: string): Partial<Record<Part, Tincture>> {
   }
   return out;
 }
+
+export type Geom = Partial<Record<GeomKey, string>>;
+
+/** "ord:fess,line:engrailed" -> { ord: "fess", line: "engrailed" }; anything unknown is dropped */
+export function parseGeom(s: string): Geom {
+  const out: Geom = {};
+  for (const item of s.split(",")) {
+    const [k, v] = item.split(":") as [GeomKey, string];
+    if (GEOM_KEYS.includes(k) && (GEOM[k] as readonly string[]).includes(v)) out[k] = v;
+  }
+  return out;
+}
+
+/** the canonical string for a geometry choice (in the order of GEOM_KEYS) */
+export const geomString = (g: Geom) => GEOM_KEYS.filter((k) => g[k]).map((k) => `${k}:${g[k]}`).join(",");
 
 /** the canonical string for a set of detail colours (in the order of PARTS) */
 export const partsString = (p: Partial<Record<Part, Tincture>>) =>
@@ -134,5 +155,6 @@ export function decodeAnswers(s: string): Answers {
     free,
     layout: /^[a-z0-9_-]{1,40}(#(\d{1,2}|g))?$/.test(layout) ? layout : d.layout,
     parts: partsString(parseParts(q.get("h") ?? "")),
+    geom: geomString(parseGeom(q.get("g") ?? "")),
   };
 }

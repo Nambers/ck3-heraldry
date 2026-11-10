@@ -80,7 +80,7 @@ const DIVISION: Record<Division, string> = {
   per_pale: "Per pale", per_fess: "Per fess", per_bend: "Per bend", per_bend_sinister: "Per bend sinister", per_saltire: "Per saltire",
   quarterly: "Quarterly", gyronny: "Gyronny of eight", barry: "Barry of six", barry8: "Barry of eight", paly: "Paly of six",
   bendy: "Bendy of six", chequy: "Chequy", lozengy: "Lozengy", lozengy_bend: "Lozengy in bend",
-  barry10: "Barry of ten", barry_indented: "Barry indented",
+  barry10: "Barry of ten", barry_indented: "Barry indented", vairy: "Vairy", fretty: "Fretty",
 };
 const ORDINARY: Record<OrdinaryKind, string> = {
   fess: "a fess", pale: "a pale", bend: "a bend", bend_sinister: "a bend sinister", chevron: "a chevron", saltire: "a saltire",
@@ -93,8 +93,20 @@ const ordEn = (o: { kind: OrdinaryKind; line?: string }) => ORDINARY[o.kind] + (
 function fieldEn(arms: Arms): string {
   const f = arms.field;
   if (f.kind === "plain") return cap(tw(f.t));
-  if (f.kind === "semy")
-    return f.charge.id === "fleur" ? `${cap(tw(f.t))}, semé-de-lis ${tw(f.charge.t)}` : `${cap(tw(f.t))}, semé of ${CHARGES[f.charge.id].en[1]} ${tw(f.charge.t)}`;
+  if (f.kind === "semy") {
+    // the rolls' own words: crusilly, billetty, bezanty and platy
+    const c = f.charge, field = cap(tw(f.t));
+    if (c.id === "fleur") return `${field}, semé-de-lis ${tw(c.t)}`;
+    if (c.id === "cross_crosslet") return `${field} crusilly ${tw(c.t)}`;
+    if (c.id === "billet") return `${field} billetty ${tw(c.t)}`;
+    if (c.id === "roundel" && c.t === "or") return `${field} bezanty`;
+    if (c.id === "roundel" && c.t === "argent") return `${field} platy`;
+    if (c.id === "roundel" && ROUNDEL[c.t]) return `${field}, semé of ${ROUNDEL[c.t]![1]}`;
+    return `${field}, semé of ${CHARGES[c.id].en[1]} ${tw(c.t)}`;
+  }
+  // the furs: "Vair" is argent and azure; a fretty field names its own tincture first
+  if (f.kind === "vairy" && f.t[0] === "argent" && f.t[1] === "azure") return "Vair";
+  if (f.kind === "fretty") return `${cap(tw(f.t[0]))} fretty ${tw(f.t[1])}`;
   return `${DIVISION[f.kind]}${f.line ? " " + f.line : ""} ${tw(f.t[0])} and ${tw(f.t[1])}`;
 }
 

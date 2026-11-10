@@ -5,7 +5,7 @@
 import type { Arms, Charge, ChargeId } from "../heraldry/ast.ts";
 import { isEscutcheon } from "../heraldry/ast.ts";
 import type { Tincture } from "../heraldry/tincture.ts";
-import type { Answers } from "./answers.ts";
+import { parseGeom, type Answers } from "./answers.ts";
 import type { Cat, LegendRow, Msg, Param } from "../designer/types.ts";
 
 // life: liege, titles, claims, deeds, place in the family; choice: symbols the
@@ -38,6 +38,9 @@ export function legend(a: Answers, arms: Arms, s: Sources): LegendRow[] {
       rows.push({ cat, what, means });
     }
   };
+  // geometry is the generator's, from the family name, unless the player chose it (Answers.geom)
+  const geom = parseGeom(a.geom);
+  const geometry = (chosen: boolean): [Cat, Msg] => (chosen ? ["taste", m("legend.means.geometryChosen")] : ["auto", m("legend.means.geometry")]);
   const realm = (id: string) => {
     const what = m("legend.what.realm", { r: { realm: id } });
     if (a.titles.includes(id)) add("life", what, m("legend.means.dominion", { r: { realm: id } }));
@@ -86,9 +89,19 @@ export function legend(a: Answers, arms: Arms, s: Sources): LegendRow[] {
   for (const f of fams) {
     for (const p of f.charges) charge(p.charge);
     const fl = f.field;
-    if (fl.kind === "semy") charge(fl.charge);
+    if (fl.kind === "semy") {
+      // powdered with a wished charge, or with one the family name (or the player's taste) picked
+      const id = fl.charge.id;
+      if ([s.main, s.second, s.tertiary, s.faith].includes(id)) charge(fl.charge);
+      else {
+        const [cat, means] = geometry(geom.semy === id);
+        add(cat, m("legend.what.div", { d: { div: `semy_${id}` } }), means);
+      }
+    }
     if (f.ordinary) {
-      add("auto", m("legend.what.ord", { o: { ord: f.ordinary.kind } }), m("legend.means.geometry"));
+      const k = f.ordinary.kind;
+      const [cat, means] = geometry(geom.ord === k || (k === "fess" && geom.ord === "bars") || (k === "chevron" && geom.ord === "chevronels"));
+      add(cat, m("legend.what.ord", { o: { ord: k } }), means);
       if (f.ordinary.on) charge(f.ordinary.on);
     }
     if (f.chief?.of) add("life", m("legend.what.capo", { r: { realm: f.chief.of.id } }), m("legend.means.capo", { r: { realm: f.chief.of.id } }));
@@ -101,7 +114,10 @@ export function legend(a: Answers, arms: Arms, s: Sources): LegendRow[] {
       add("auto", m("legend.what.canton"), m("legend.means.geometry"));
       if (f.canton.charge) charge(f.canton.charge);
     }
-    if (fl.kind !== "plain" && fl.kind !== "semy") add("auto", m("legend.what.div", { d: { div: fl.kind } }), m("legend.means.geometry"));
+    if (fl.kind !== "plain" && fl.kind !== "semy") {
+      const [cat, means] = geometry([geom.div, geom.var, geom.fur].includes(fl.kind));
+      add(cat, m("legend.what.div", { d: { div: fl.kind } }), means);
+    }
     if (f.overall?.of) realm(f.overall.of.id);
   }
   if (fams.length) {

@@ -210,6 +210,18 @@
       "none": "当前选的图案没有其他颜色。",
       "auto": "自动",
       "colour": "颜色 {n}"
+    },
+    "geom": {
+      "title": "几何图形与线条",
+      "mech": "纯属审美，没有象征含义。默认由家族名决定，同一个名字总得到同样的结果；在这里可以直接指定。散布底的图案默认按纹章卷里的常见程度挑（十字最多，其次是长方块、圆片），百合花只在指定时出现。线条只用在原版有贴图的地方，其余保持直线",
+      "auto": "由家族名决定",
+      "plain": "直线",
+      "ord": "几何图形",
+      "div": "分割",
+      "var": "条纹方格",
+      "fur": "毛皮",
+      "line": "线条",
+      "semy": "散布"
     }
   },
   "fam": {
@@ -550,7 +562,13 @@
     "lozengy": "菱格",
     "lozengy_bend": "斜菱格",
     "barry10": "横条纹（十道）",
-    "barry_indented": "锯齿横条纹"
+    "barry_indented": "锯齿横条纹",
+    "vairy": "松鼠皮纹",
+    "fretty": "网格",
+    "semy_cross_crosslet": "散布十字",
+    "semy_billet": "散布长方块",
+    "semy_roundel": "散布圆片",
+    "semy_fleur": "散布百合花"
   },
   "ord": {
     "fess": "横带",
@@ -589,7 +607,9 @@
     "threePale": "三个{a}竖排",
     "threeFess": "三个{a}横排",
     "threeBend": "三个{a}沿斜线排列",
-    "six": "六个{a}，三二一排列"
+    "six": "六个{a}，三二一排列",
+    "fieldOrdinary": "{d}底，一道{o}",
+    "fieldCharge": "{d}底，{a}居中"
   },
   "place": {
     "augmentation": "左上角为{r}的恩赐角区",
@@ -633,7 +653,9 @@
       "plain": "{t}底",
       "ermine": "白鼬皮纹底",
       "semy": "{t}底，散布{c}",
-      "div": "{d}，{a}与{b}"
+      "div": "{d}，{a}与{b}",
+      "vair": "银蓝松鼠皮纹底",
+      "fretty": "{a}底{b}网格"
     },
     "ordinary": "一道{t}{o}",
     "pallets": "四条{t}竖带",
@@ -961,7 +983,9 @@
     "three_pale": "三图竖排",
     "three_fess": "三图横排",
     "three_bend": "三图斜排",
-    "six": "六图式（三二一）"
+    "six": "六图式（三二一）",
+    "fieldOrdinary": "{d}配{o}",
+    "fieldCharge": "{d}配主图案"
   },
   "legend": {
     "what": {
@@ -1015,7 +1039,8 @@
         "baton": "私生一脉"
       },
       "pilgrimage_rome": "去罗马朝圣",
-      "pilgrimage_jerusalem": "去耶路撒冷朝圣"
+      "pilgrimage_jerusalem": "去耶路撒冷朝圣",
+      "geometryChosen": "自己指定的几何图形，没有象征含义"
     }
   },
   "line": {
@@ -1023,6 +1048,7 @@
     "indented": "锯齿",
     "dancetty": "大锯齿",
     "embattled": "城垛形",
-    "nebuly": "云纹"
+    "nebuly": "云纹",
+    "fusilly": "菱形连缀"
   }
 }

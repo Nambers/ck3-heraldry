@@ -267,6 +267,9 @@ export const TEX = {
   lozengyBend: "ce_lozengy_bend.dds",
   ermine: "ce_ermine.dds", // color1 ground, color2 spots
   barryIndented: "ce_barry_indented.dds",
+  // furs: whole-box two-colour textures, color1 the metal
+  vairy: "ce_vairy.dds", // 24 px cells of 128: rows of bells, color1 pointing up, color2 down; see VAIR in layout.ts
+  fretty: "ce_fretty.dds", // color1 field, color2 a lattice of 45° bands; see FRET in layout.ts
   // diminutives and other ordinaries
   bars: "ce_ordinary_bars_2.dds", // y .2–.4 and .6–.8
   chevronels: "ce_ordinary_chevron_3.dds", // apexes at y .05/.375/.7, each .16 thick, slope ≈ 1
@@ -281,6 +284,8 @@ export const TEX = {
     chief_indented: "ce_chief_indented_alpha.dds", // solid to y .277, teeth to .387 (ce_chief_indented also paints the field)
     per_fess_indented: "ce_per_fess_indented.dds", // color1 above; teeth between y .37 and .63
     per_bend_nebuly: "ce_per_bend_nebuly.dds", // color1 upper right, like ce_per_bend
+    fess_fusilly: "ce_fess_lozenges.dds", // seven upright fusils side by side, y .281–.719; see fusils() in layout.ts
+    bend_fusilly: "ce_bend_lozenges.dds", // the same turned 45° along the dexter diagonal, about twice a bend's width
   } as Record<string, string>,
   patterns: {
     per_pale: "pattern_vertical_split_01.dds", // color1 dexter

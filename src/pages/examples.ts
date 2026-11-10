@@ -1,6 +1,9 @@
 // Examples page: each example drawn from its answers by the real generator,
 // with a link that opens it in the designer. The list is in example-list.ts.
 
+import { CHARGES, CHARGE_IDS, type Category } from "../charges.ts";
+import { chargeName } from "../describe.ts";
+import { icon } from "../designer/kit.ts";
 import { blazon } from "../heraldry/blazon.ts";
 import { locale } from "../i18n/index.ts";
 import { DEFAULT_ANSWERS, encodeAnswers } from "../west/answers.ts";
@@ -42,6 +45,46 @@ function card(ex: Example): string {
   </article>`;
 }
 
+// every charge, by kind; each opens the designer with it as the main charge
+const KINDS: [Category, Text][] = [
+  ["beast", { zh: "走兽", en: "Beasts" }],
+  ["bird", { zh: "鸟", en: "Birds" }],
+  ["monster", { zh: "神兽", en: "Monsters" }],
+  ["sea", { zh: "水生", en: "Sea creatures" }],
+  ["plant", { zh: "花木", en: "Plants" }],
+  ["building", { zh: "建筑", en: "Buildings" }],
+  ["object", { zh: "器物", en: "Objects" }],
+  ["celestial", { zh: "星月", en: "Celestial" }],
+  ["geometric", { zh: "几何", en: "Geometric" }],
+  ["cross", { zh: "十字", en: "Crosses" }],
+];
+
+// a realm's whole device (Portugal's quinas) is never chosen
+const CHOOSABLE = CHARGE_IDS.filter((id) => !CHARGES[id].whole);
+
+function library(): string {
+  let s = "";
+  for (const [kind, name] of KINDS) {
+    const ids = CHOOSABLE.filter((id) => CHARGES[id].cat === kind);
+    if (!ids.length) continue;
+    s += `<h3>${esc(L(name))}</h3><div class="exlib">`;
+    for (const id of ids) {
+      const href = pageHref("west", encodeAnswers({ ...DEFAULT_ANSWERS, emblem: id, origin: "none" }));
+      s += `<a class="libitem" href="${esc(href)}">${icon(id, 44)}<span>${esc(chargeName(id))}</span></a>`;
+    }
+    s += `</div>`;
+  }
+  return `<section id="library">
+  <h2>${zh() ? "图案库" : "Charge library"}</h2>
+  <p>${
+    zh()
+      ? `本站能画、能导出到 CK3 的全部 ${CHOOSABLE.length} 种图案。点一个，就在纹章工坊里以它为主图案打开。`
+      : `All ${CHOOSABLE.length} charges the site can draw and export to CK3. Click one to open the designer with it as the main charge.`
+  }</p>
+  ${s}
+</section>`;
+}
+
 const render = () => `
 <h1>${zh() ? "示例" : "Examples"}</h1>
 <p class="lead">${
@@ -49,7 +92,7 @@ const render = () => `
     ? "下面每面纹章都是本站按一组回答现场生成的。点盾或「在纹章工坊里打开」，可以带着这组回答接着改。"
     : "Every coat below is generated on the spot from a set of answers. Click the shield or “Open in the designer” to carry on from those answers."
 }</p>
-<nav class="extoc">${SECTIONS.map((s) => `<a href="#${s.id}">${esc(L(s.title))}</a>`).join(`<span class="dot" aria-hidden="true">·</span>`)}</nav>
+<nav class="extoc">${[...SECTIONS.map((s) => `<a href="#${s.id}">${esc(L(s.title))}</a>`), `<a href="#library">${zh() ? "图案库" : "Charge library"}</a>`].join(`<span class="dot" aria-hidden="true">·</span>`)}</nav>
 ${SECTIONS.map(
   (s) => `<section id="${s.id}">
   <h2>${esc(L(s.title))}</h2>
@@ -57,6 +100,7 @@ ${SECTIONS.map(
   <div class="exgrid">${s.examples.map(card).join("")}</div>
 </section>`,
 ).join("")}
+${library()}
 <p class="lead">${
   zh()
     ? `想补一个例子？见仓库里的 <code>src/pages/example-list.ts</code>。`

@@ -85,8 +85,92 @@ export const ORDINARY_POLYS: Partial<Record<ShapeKind, Pt[][]>> = {
 };
 export const CANTON = { w: 0.4, h: 0.38 };
 
+/** a polygon cut to the box (Sutherland–Hodgman against x, y in [lo, hi]) */
+export function clipToBox(pts: Pt[], lo = -0.01, hi = 1.01): Pt[] {
+  const edges: [(p: Pt) => boolean, (a: Pt, b: Pt) => Pt][] = [0, 1].flatMap((axis) =>
+    [lo, hi].map((v): [(p: Pt) => boolean, (a: Pt, b: Pt) => Pt] => [
+      (p) => (v === lo ? p[axis] >= v : p[axis] <= v),
+      (a, b) => {
+        const k = (v - a[axis]) / (b[axis] - a[axis]);
+        return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+      },
+    ]),
+  );
+  let out = pts;
+  for (const [inside, cut] of edges) {
+    const src = out;
+    out = [];
+    src.forEach((p, i) => {
+      const q = src[(i + 1) % src.length];
+      if (inside(p)) out.push(p);
+      if (inside(p) !== inside(q)) out.push(cut(p, q));
+    });
+    if (!out.length) break;
+  }
+  return out;
+}
+
+/**
+ * Fusils conjoined, where ce_fess_lozenges / ce_bend_lozenges draw them: seven upright
+ * fusils touching side to side across the fess (centres 19.17 px apart on 128, 28 px
+ * tall each way); the bend turns the row 45° along the diagonal (centres every 15 px).
+ */
+function fusils(kind: "fess" | "bend"): Pt[][] {
+  if (kind === "fess") {
+    const hw = 19.17 / 2 / 128, hh = 28 / 128;
+    return Array.from({ length: 7 }, (_, i): Pt[] => {
+      const x = (6 + 19.17 * i) / 128;
+      return clipToBox([[x, 0.5 - hh], [x + hw, 0.5], [x, 0.5 + hh], [x - hw, 0.5]]);
+    });
+  }
+  const a = 7.5 / 128, p = 19.5 / 128;
+  return Array.from({ length: 9 }, (_, j): Pt[] => {
+    const c = (7.5 + 15 * j) / 128;
+    return clipToBox([[c - a, c - a], [c + p, c - p], [c + a, c + a], [c - p, c + p]]);
+  });
+}
+
+/**
+ * ce_vairy: rows of vair-bells 24 px high and wide (of 128), the first row's top at
+ * y = 3 px; color2 bells hang point down (centred at x = 15.5 px + 24 px · j, shifted
+ * half a bell on alternate rows), color1 shows between them pointing up. Box-relative
+ * polygons of the color2 bells, cut to the box.
+ */
+export function vairBells(): Pt[][] {
+  const u = (v: number) => v / 128;
+  const bell: Pt[] = [[-12, 0], [12, 0], [6, 6], [6, 18], [0, 24], [-6, 18], [-6, 6]];
+  const out: Pt[][] = [];
+  for (let k = -1; k <= 5; k++)
+    for (let j = -1; j <= 6; j++) {
+      const cx = 15.5 + 24 * j + (k % 2 ? 12 : 0), y0 = 3 + 24 * k;
+      const p = clipToBox(bell.map(([x, y]): Pt => [u(cx + x), u(y0 + y)]));
+      if (p.length > 2) out.push(p);
+    }
+  return out;
+}
+
+/**
+ * ce_fretty: bands at 45° both ways, 52 px wide measured across x (of 512), their
+ * centre lines at x ± y = 60.5 px + 195 px · k. Box-relative polygons, cut to the box;
+ * the dexter bands first.
+ */
+export function fretBands(): Pt[][] {
+  const c0 = 60.5 / 512, q = 195 / 512, h = 26 / 512;
+  const out: Pt[][] = [];
+  for (const dexter of [true, false])
+    for (let k = -4; k <= 6; k++) {
+      const c = c0 + k * q;
+      // points of the band at y = -1 and y = 2: x = c + y (dexter) or c - y (sinister)
+      const at = (d: number, y: number): Pt => [dexter ? d + y : d - y, y];
+      const p = clipToBox([at(c - h, -1), at(c + h, -1), at(c + h, 2), at(c - h, 2)]);
+      if (p.length > 2) out.push(p);
+    }
+  return out;
+}
+
 /** an ordinary's footprint, allowing for its line (a dancetty fess and an engrailed bend are wider) */
 export function ordinaryPolys(kind: ShapeKind, line?: Line): Pt[][] {
+  if (line === "fusilly" && (kind === "fess" || kind === "bend")) return fusils(kind);
   if (kind === "fess" && line === "dancetty") return [[[-0.01, 0.36], [1.01, 0.36], [1.01, 0.65], [-0.01, 0.65]]];
   if (kind === "bend" && line === "engrailed") {
     const h = 0.19;

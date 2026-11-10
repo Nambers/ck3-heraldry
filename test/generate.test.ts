@@ -8,10 +8,10 @@ import { blazon } from "../src/heraldry/blazon.ts";
 import { checkArms } from "../src/heraldry/rules.ts";
 import { lintArms } from "../src/lint.ts";
 import { LOCALES, setLocale } from "../src/i18n/index.ts";
-import { DEFAULT_ANSWERS, PALETTES, decodeAnswers, encodeAnswers, partsString, type Answers } from "../src/west/answers.ts";
+import { DEFAULT_ANSWERS, PALETTES, decodeAnswers, encodeAnswers, geomString, partsString, type Answers } from "../src/west/answers.ts";
 import { TINCTURES } from "../src/heraldry/tincture.ts";
 import { generate, hash, type Result } from "../src/west/generate.ts";
-import { CADENCY, DEEDS, EMBLEM_FAMILIES, FAITH_CHARGES, ORIGIN_GROUPS, PARTS, STYLES } from "../src/west/questions.ts";
+import { CADENCY, DEEDS, EMBLEM_FAMILIES, FAITH_CHARGES, GEOM, GEOM_KEYS, ORIGIN_GROUPS, PARTS, STYLES } from "../src/west/questions.ts";
 import { RANKS, REALM_IDS, canHold, type Rank } from "../src/realms.ts";
 import { renderSvg } from "../src/render/svg.ts";
 import { escutcheonSafe } from "../src/layout.ts";
@@ -50,6 +50,8 @@ function* sample(n: number): Generator<Answers> {
       titles,
       // one in five picks its own detail colours
       parts: i % 5 ? "" : partsString(Object.fromEntries(PARTS.map((p, j) => [p, pickFrom(TINCTURES, i, 30 + j)]))),
+      // one in four chooses its own geometry, each part of it half the time
+      geom: i % 4 ? "" : geomString(Object.fromEntries(GEOM_KEYS.flatMap((k, j) => (hash(`${i}:${40 + j}`) % 2 ? [[k, pickFrom(GEOM[k], i, 50 + j)]] : [])))),
     };
   }
 }
@@ -219,12 +221,12 @@ describe("generator", () => {
   });
 
   it("reproduces the Gonzaga grant of 1433 to Gianfrancesco I", () => {
-    const a: Answers = { ...DEFAULT_ANSWERS, name: "Gianfrancesco I Gonzaga", year: 1430, liege: "hre", deed: "service", emblem: "none", origin: "none", palette: "or/sable" };
+    const a: Answers = { ...DEFAULT_ANSWERS, name: "Gianfrancesco I Gonzaga", year: 1430, liege: "hre", deed: "service", emblem: "none", origin: "none", palette: "or/sable", geom: "var:barry" };
     const c = generate(a).candidates.find((c) => c.arms.granted?.id === "hre" && c.arms.overall?.arms.field.kind === "barry");
     expect(c && blazon(c.arms)).toBe("Argent, a cross gules between four eagles displayed sable, armed gules; over all an escutcheon of the family arms (Barry of six sable and Or)");
     // and the table says what each part stands for
     const rows = generate({ ...a, layout: c!.id }).legend.map((r) => `${r.cat}:${r.means.key}`);
-    expect(rows).toEqual(expect.arrayContaining(["life:legend.means.grant", "life:legend.means.ownEscGrant", "auto:legend.means.geometry"]));
+    expect(rows).toEqual(expect.arrayContaining(["life:legend.means.grant", "life:legend.means.ownEscGrant", "taste:legend.means.geometryChosen"]));
   });
 
   it("says where every element came from", () => {
@@ -277,6 +279,48 @@ describe("generator", () => {
     const a = { ...DEFAULT_ANSWERS, parts: "armed:azure,crined:argent" };
     expect(decodeAnswers(encodeAnswers(a)).parts).toBe("armed:azure,crined:argent");
     expect(decodeAnswers("h=crined:argent,armed:azure,nose:gules,crowned:ermine").parts).toBe("armed:azure,crined:argent");
+  });
+
+  it("lets the player choose the geometry instead of the family name", () => {
+    const plain = { ...DEFAULT_ANSWERS, name: "Percy", emblem: "none", origin: "none", palette: "azure/or" };
+    const ids = (a: Answers) => generate(a).candidates.map((c) => c.id);
+    const r = generate({ ...plain, geom: "ord:fess,div:quarterly,var:chequy,fur:fretty,line:fusilly" });
+    expect(r.candidates.map((c) => c.id)).toEqual(expect.arrayContaining(["ordinary-fess#0", "division-quarterly#0", "varied-chequy#0", "fur-fretty#0"]));
+    expect(blazon(r.candidates.find((c) => c.id === "ordinary-fess#0")!.arms)).toBe("Azure, a fess fusilly Or");
+    // a line goes only where CK3 has a texture for it: there is no fusilly division
+    expect(blazon(r.candidates.find((c) => c.id === "division-quarterly#0")!.arms)).toBe("Quarterly azure and Or");
+    // "straight" overrides the name's line; with charges, two bars stand for a fess
+    expect(JSON.stringify(generate({ ...plain, geom: "line:plain" }).candidates.map((c) => c.arms))).not.toContain('"line"');
+    expect(ids({ ...plain, emblem: "lion_rampant", geom: "ord:bars" })).toContain("between-fess#0");
+    // what the name picks is unchanged when nothing is chosen
+    expect(ids({ ...plain, geom: "" })).toEqual(ids(plain));
+  });
+
+  it("powders a family's field as the rolls do, in the tincture of what lies on it", () => {
+    const r = generate({ ...DEFAULT_ANSWERS, emblem: "lion_rampant", origin: "none", palette: "gules/or", geom: "semy:cross_crosslet" });
+    const c = r.candidates.find((c) => c.id === "semy-cross_crosslet#0")!;
+    expect(blazon(c.arms)).toBe("Gules crusilly Or, a lion rampant Or");
+    // a second wish that is a semé charge is powdered over the field
+    const two = generate({ ...DEFAULT_ANSWERS, emblem: "lion_rampant", origin: "billet", palette: "azure/or" });
+    expect(blazon(two.candidates.find((c) => c.id === "semy-billet#0")!.arms)).toBe("Azure billetty Or, a lion rampant Or");
+    // without a charge: alone, or under an ordinary
+    const ids = generate({ ...DEFAULT_ANSWERS, emblem: "none", origin: "none", palette: "sable/or", geom: "semy:roundel,ord:fess" }).candidates.map((c) => c.id);
+    expect(ids).toEqual(expect.arrayContaining(["semy-roundel#0", "semy-fess-roundel#0"]));
+  });
+
+  it("powders a family's field with fleurs-de-lis only when chosen (gold on blue is France)", () => {
+    for (let i = 0; i < 300; i++) {
+      const r = generate({ ...DEFAULT_ANSWERS, name: `House ${i}`, emblem: "none", origin: "none", palette: "azure/or" });
+      expect(r.candidates.some((c) => c.arms.field.kind === "semy" && c.arms.field.charge.id === "fleur")).toBe(false);
+    }
+    const r = generate({ ...DEFAULT_ANSWERS, emblem: "none", origin: "none", palette: "or/sable", geom: "semy:fleur" });
+    expect(r.candidates.map((c) => blazon(c.arms))).toContain("Or, semé-de-lis sable");
+  });
+
+  it("keeps the chosen geometry in the link, and drops what it does not know", () => {
+    const a = { ...DEFAULT_ANSWERS, geom: "ord:fess,fur:vairy,line:engrailed" };
+    expect(decodeAnswers(encodeAnswers(a)).geom).toBe("ord:fess,fur:vairy,line:engrailed");
+    expect(decodeAnswers("g=line:wavy,fur:ermine,ord:pall,colour:red,div:per_fess").geom).toBe("ord:pall,div:per_fess");
   });
 
   it("never lets a cadency mark overlap the top of the shield", { timeout: 60_000 }, () => {

@@ -53,6 +53,7 @@ pnpm check    # 类型检查 + 全部测试，约半分钟
 | `src/describe.ts`、`src/i18n/` | 用当前语言描述纹章（量词、复数）；全部界面文字 |
 | `test/`、`scripts/`、`tools/` | 测试；开发脚本（Node）；Python 工具（测量和渲染游戏贴图、处理背景画） |
 | `fixtures/samples/` | 测试用的 CK3 代码样本 |
+| `fixtures/rolls/` | 13 世纪纹章卷的 blazon（公有领域），用来量缺口 |
 
 ## 常见改动
 
@@ -95,7 +96,9 @@ pnpm check    # 类型检查 + 全部测试，约半分钟
 3. 写中英文的标题和说明。如果是真实纹章，加上英文 `blazon` 和出处（维基或 Commons），和原纹章不同的地方在说明里写明。
 4. 跑 `pnpm check`。`test/examples.test.ts` 会检查排法还在、没有放弃的愿望、blazon 没变。
 
-如果想要的几何图形没出现，可以换一个家族名，因为默认的几何图形和线条由家族名决定。
+纹章卷里的实例：用 `python3 tools/roll_gaps.py --show <特征>`（如 `--show "cross engrailed"`）在 `fixtures/rolls/` 里找，放进示例页的「纹章卷」三组，链接写卷名和编号。新支持的图案在页末的图案库里自动出现。
+
+默认的几何图形、分割、条纹、毛皮、散布底和线条由家族名决定。示例里要用 `geom` 把它们固定下来（如 `geom: "ord:fess,line:fusilly"`），这样以后加了新的种类也不会变。
 
 ### 加设计器
 
@@ -158,6 +161,7 @@ pnpm check    # 类型检查 + 全部测试，约半分钟
 | `pnpm build && pnpm preview` | 构建，并在 4719 端口预览（纯静态站，任何静态托管都能放；`main` 分支通过 CI 后自动部署到 GitHub Pages） |
 | `python3 tools/ck3_preview.py in.txt -o out.png` | 用游戏贴图渲染 CK3 代码 |
 | `python3 tools/measure_textures.py ce_xxx [--sheet out.png]` | 测量贴图的可见范围和颜色通道 |
+| `python3 tools/roll_gaps.py [--show 特征]` | 对照纹章卷统计缺口，结果见 [roll-gaps.md](docs/roll-gaps.md)；支持了新机制后改它的状态再跑 |
 
 ## 约定
 

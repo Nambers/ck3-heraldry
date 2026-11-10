@@ -9,10 +9,10 @@ import { CHARGES } from "../charges.ts";
 import { TINCTURE, TINCTURES, type Tincture } from "../heraldry/tincture.ts";
 import { t } from "../i18n/index.ts";
 import { RANKS, canHold, realmAt } from "../realms.ts";
-import { ALL_PALETTES, DEFAULT_ANSWERS, MAX_TITLES, PALETTES, parseParts, partsString, type Answers } from "./answers.ts";
-import { CADENCY, DEEDS, EMBLEM_FAMILIES, FAITH_CHARGES, ORIGIN_GROUPS, PARTS, PART_ROLE, SECTIONS, STYLES, YEAR_PRESETS, familyOf, realmOptions, titleOptions, type Family, type Part } from "./questions.ts";
+import { ALL_PALETTES, DEFAULT_ANSWERS, MAX_TITLES, PALETTES, geomString, parseGeom, parseParts, partsString, type Answers } from "./answers.ts";
+import { CADENCY, DEEDS, EMBLEM_FAMILIES, FAITH_CHARGES, GEOM, GEOM_KEYS, ORIGIN_GROUPS, PARTS, PART_ROLE, SECTIONS, STYLES, YEAR_PRESETS, familyOf, realmOptions, titleOptions, type Family, type GeomKey, type Part } from "./questions.ts";
 
-/** which family is open in a two-level picker, when the answer itself is "none" */
+/** the family last opened in a two-level picker: it stays open while it holds the answer (the bell is in two families) */
 const openFamily: Record<"emblem" | "origin", string | null> = { emblem: null, origin: null };
 /** whether the detail colours under the palette are unfolded (they start folded) */
 let partsOpen = false;
@@ -66,7 +66,9 @@ const rankPicker = (a: Answers) => `<div class="opts">${RANKS.map((r) => chip("r
 
 function picker(a: Answers, name: "emblem" | "origin", groups: Family[], extra: string[]): string {
   const value = a[name];
-  const fam = familyOf(groups, value)?.id ?? openFamily[name];
+  // the family shown open holds the answer; with no charge chosen ("none", the liege's) none is open
+  const last = groups.find((g) => g.id === openFamily[name]);
+  const fam = last?.charges.includes(value) ? last.id : familyOf(groups, value)?.id;
   let s = `<div class="opts">`;
   for (const v of extra) s += chip(name, v, t(`q.${name}.${v}`), value === v);
   for (const g of groups) s += `<button type="button" class="chip fam${fam === g.id ? " on" : ""}" data-family="${name}" data-value="${g.id}">${icon(g.charges[0], 20)}<span>${t(`fam.${g.id}`)}</span></button>`;
@@ -143,6 +145,22 @@ function partsPanel(a: Answers): string {
   return s + `</div>`;
 }
 
+/** the name of one geometry option, from the catalogs the descriptions use */
+const geomLabel = (k: GeomKey, v: string) =>
+  k === "ord" ? t(`ord.${v}`) : k === "line" ? (v === "plain" ? t("q.geom.plain") : t(`line.${v}`)) : k === "semy" ? t(`div.semy_${v}`) : t(`div.${v}`);
+
+/** the ordinary, division, striped field, fur, semé and line: by the family name unless chosen here */
+function geomPicker(a: Answers): string {
+  const g = parseGeom(a.geom);
+  return GEOM_KEYS.map((k) => {
+    const label = t(`q.geom.${k}`);
+    let s = `<label class="partrow"><span class="plabel">${esc(label)}</span><select name="geom:${k}" aria-label="${esc(label)}">`;
+    s += `<option value=""${g[k] ? "" : " selected"}>${esc(t("q.geom.auto"))}</option>`;
+    for (const v of GEOM[k]) s += `<option value="${v}"${g[k] === v ? " selected" : ""}>${esc(geomLabel(k, v))}</option>`;
+    return s + `</select></label>`;
+  }).join("");
+}
+
 function render(a: Answers): string {
   const q: Partial<Record<keyof Answers, string>> = {};
   q.name = fieldset(t("q.name.title"), t("q.name.mech"), `<input type="text" name="name" maxlength="60" placeholder="${esc(t("app.namePlaceholder"))}" value="${esc(a.name)}">`);
@@ -166,6 +184,7 @@ function render(a: Answers): string {
     `<div class="opts">${chip("faith", "none", t("q.faith.none"), a.faith === "none")}${FAITH_CHARGES.map((id) => chip("faith", id, chargeName(id), a.faith === id, "", icon(id))).join("")}</div>`,
   );
   q.style = fieldset(t("q.style.title"), t("q.style.mech"), `<div class="opts">${STYLES.map((s) => chip("style", s, t(`q.style.opt.${s}`), a.style === s)).join("")}</div>`);
+  q.geom = fieldset(t("q.geom.title"), t("q.geom.mech"), geomPicker(a));
   q.palette = fieldset(t("q.palette.title"), t("q.palette.mech"), palettePicker(a) + partsPanel(a));
   // questions grouped by kind: facts of the character's life, the family's own choices, looks
   return sections(SECTIONS.map((sec) => ({ cat: sec.cat, html: sec.questions.map((k) => q[k] ?? "") })));
@@ -177,6 +196,13 @@ export const westForm: Form<Answers> = {
     if (el.name === "year") return setAnswer(a, "year", Math.min(1453, Math.max(867, Math.round(Number(el.value) || DEFAULT_ANSWERS.year))));
     if (el.name === "name") return setAnswer(a, "name", el.value.slice(0, 60));
     if (el.name === "liege" || el.name === "claim") return setAnswer(a, el.name, el.value);
+    if (el.name.startsWith("geom:")) {
+      const g = parseGeom(a.geom);
+      const k = el.name.slice(5) as GeomKey;
+      if (el.value) g[k] = el.value;
+      else delete g[k];
+      return setAnswer(a, "geom", geomString(g));
+    }
     return null;
   },
   click(b, a) {

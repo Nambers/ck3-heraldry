@@ -146,6 +146,10 @@ function divisionPieces(n: Extract<LNode, { type: "division" }>): Piece[] {
       return stripes(box, t, 10, false);
     case "barry_indented":
       return [over(TEX.barryIndented, box, [t[0], t[1]])];
+    case "vairy":
+      return [over(TEX.vairy, box, [t[0], t[1]])];
+    case "fretty":
+      return [over(TEX.fretty, box, [t[0], t[1]])];
     case "paly":
       return stripes(box, t, 6, true);
     case "chequy": {

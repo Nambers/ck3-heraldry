@@ -8,7 +8,7 @@ import { CHARGES, TEX } from "../charges.ts";
 import { roleTinctures } from "../ck3/export.ts";
 import type { Arms } from "../heraldry/ast.ts";
 import { TINCTURE, type Tincture } from "../heraldry/tincture.ts";
-import { CHIEF_INDENTED, layout, ORDINARY_POLYS, ordinaryPolys, type Box, type LNode } from "../layout.ts";
+import { CHIEF_INDENTED, fretBands, layout, ORDINARY_POLYS, ordinaryPolys, vairBells, type Box, type LNode } from "../layout.ts";
 
 const S = 100; // viewBox units per CK3 unit
 const n = (v: number) => +(v * S).toFixed(2);
@@ -72,6 +72,7 @@ const zigzag = (teeth: number, y0: number, y1: number): Pt[] =>
 
 function linedShape(node: Extract<LNode, { type: "shape" }>, c: string): string {
   const b = node.box;
+  if (node.line === "fusilly") return ordinaryPolys(node.kind, node.line).map((p) => poly(b, p, c)).join("");
   if (node.kind === "fess" && node.line === "dancetty") {
     const top = zigzag(5, 0.453, 0.367);
     return poly(b, [...top, ...top.map(([x, y]) => [x, y + 0.195] as Pt).reverse()], c);
@@ -165,6 +166,10 @@ function division(node: Extract<LNode, { type: "division" }>, ctx: Ctx): string 
       }
       return s;
     }
+    case "vairy":
+      return base + vairBells().map((p) => poly(b, p, c)).join("");
+    case "fretty":
+      return base + fretBands().map((p) => poly(b, p, c)).join("");
     case "lozengy":
     case "lozengy_bend": {
       let s = base;

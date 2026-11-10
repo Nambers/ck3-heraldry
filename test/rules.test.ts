@@ -65,6 +65,20 @@ describe("blazon", () => {
       b({ field: { kind: "plain", t: "gules" }, ordinary: { kind: "chevron", t: "argent", on: { id: "mullet", t: "azure" } }, charges: [{ at: "between", charge: { id: "escallop", t: "argent" } }] }),
     ).toBe("Gules, on a chevron argent three mullets azure between three escallops argent");
   });
+  it("blazons the furs and fusils conjoined", () => {
+    expect(b({ field: { kind: "vairy", t: ["argent", "azure"] }, ordinary: { kind: "fess", t: "gules" }, charges: [] })).toBe("Vair, a fess gules");
+    expect(b({ field: { kind: "vairy", t: ["or", "gules"] }, charges: [] })).toBe("Vairy Or and gules");
+    expect(b({ field: { kind: "fretty", t: ["gules", "or"] }, charges: [] })).toBe("Gules fretty Or");
+    expect(b({ field: { kind: "plain", t: "argent" }, ordinary: { kind: "bend", t: "gules", line: "fusilly" }, charges: [] })).toBe("Argent, a bend fusilly gules");
+  });
+  it("blazons semé fields in the rolls' words", () => {
+    const semy = (id: string, t: "or" | "argent" | "gules", rest: Partial<Arms> = {}): Arms => ({ field: { kind: "semy", t: "sable", charge: { id, t } }, charges: [], ...rest });
+    expect(b(semy("cross_crosslet", "or", { charges: [{ at: "center", charge: { id: "lion_rampant", t: "or" } }] }))).toBe("Sable crusilly Or, a lion rampant Or");
+    expect(b(semy("billet", "argent", { ordinary: { kind: "bend", t: "argent" } }))).toBe("Sable billetty argent, a bend argent");
+    expect(b(semy("roundel", "or"))).toBe("Sable bezanty");
+    expect(b(semy("roundel", "argent"))).toBe("Sable platy");
+    expect(b(semy("roundel", "gules"))).toBe("Sable, semé of torteaux");
+  });
   it("blazons the French semé and cadency marks", () => {
     expect(b({ field: { kind: "semy", t: "azure", charge: { id: "fleur", t: "or" } }, charges: [], brisure: { kind: "label", t: "gules" } })).toBe(
       "Azure, semé-de-lis Or; a label of three points gules",

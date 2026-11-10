@@ -7,7 +7,7 @@
 // that keep every wish come first.
 
 import { CHARGES, isEagleLike } from "../charges.ts";
-import type { Arms, Charge, ChargeId, Division, Escutcheon, OrdinaryKind, Placed } from "../heraldry/ast.ts";
+import type { Arms, Charge, ChargeId, Division, Escutcheon, Field, OrdinaryKind, Placed } from "../heraldry/ast.ts";
 import { LINES, firstTincture, plain, type Line } from "../heraldry/ast.ts";
 import { checkArms, signature } from "../heraldry/rules.ts";
 import { contrasts, isMetal, type Tincture } from "../heraldry/tincture.ts";
@@ -15,8 +15,8 @@ import { ON, escutcheonSafe } from "../layout.ts";
 import { REALMS, REALM_IDS, canHold, realmAt, realmMainCharge, realmPalette, type Period } from "../realms.ts";
 import type { Candidate as BaseCandidate, Msg, Note, Param, Result as BaseResult } from "../designer/types.ts";
 import { defaultCrown } from "../ck3/export.ts";
-import { parseParts, type Answers, type Style } from "./answers.ts";
-import { PARTS, PART_ROLE, type Part } from "./questions.ts";
+import { parseGeom, parseParts, type Answers, type Geom, type Style } from "./answers.ts";
+import { GEOM, PARTS, PART_ROLE, type Part } from "./questions.ts";
 import { legend } from "./legend.ts";
 
 export type { Msg, Note, Param } from "../designer/types.ts";
@@ -87,11 +87,20 @@ function contrasting(under: Tincture | null, avoid: Tincture[]): Tincture {
   );
 }
 
-const ORDINARY_ROTATION: OrdinaryKind[] = ["chevron", "fess", "bend", "saltire", "cross", "pale", "pall"];
+// what the family name picks from, in a fixed order (questions.ts GEOM); the player may pick instead
 /** without charges there is room for the diminutives too */
-const PLAIN_ORDINARY_ROTATION: OrdinaryKind[] = [...ORDINARY_ROTATION, "bars", "chevronels"];
-const DIVISION_ROTATION: Division[] = ["per_pale", "per_bend", "quarterly", "per_saltire", "per_fess", "gyronny"];
-const VARIED_ROTATION: Division[] = ["barry", "paly", "bendy", "chequy", "lozengy", "barry_indented"];
+const PLAIN_ORDINARY_ROTATION: OrdinaryKind[] = [...GEOM.ord];
+const ORDINARY_ROTATION: OrdinaryKind[] = PLAIN_ORDINARY_ROTATION.filter((k) => k !== "bars" && k !== "chevronels");
+const DIVISION_ROTATION: Division[] = [...GEOM.div];
+const VARIED_ROTATION: Division[] = [...GEOM.var];
+/** furs have candidates of their own, built the way the rolls use them */
+const FUR_ROTATION = GEOM.fur;
+/**
+ * Semé fields for families, as often as the 13th-century rolls have them (docs/roll-gaps.md:
+ * crusilly 49, billetty 22, bezanty 15). Semé-de-lis only when chosen: on a family it is rare,
+ * and gold on blue is the arms of France.
+ */
+const SEMY_BY_NAME = ["cross_crosslet", "billet", "cross_crosslet", "roundel", "cross_crosslet", "billet"];
 
 interface Base {
   id: string;
@@ -106,21 +115,44 @@ const at = (spot: Placed["at"], charge: Charge): Placed => ({ at: spot, charge }
 
 // ---------------------------------------------------------------- templates
 
-function templates(Fp: Tincture, C: Tincture, A: Charge | undefined, B: Charge | undefined, seed: number, capo: { realm: string; arms: Arms } | null): Base[] {
+function templates(Fp: Tincture, C: Tincture, A: Charge | undefined, B: Charge | undefined, seed: number, capo: { realm: string; arms: Arms } | null, geom: Geom): Base[] {
   const out: Base[] = [];
   // ermine can only be a plain field in CK3; charges and stripes use argent instead
   const F: Tincture = Fp === "ermine" ? "argent" : Fp;
   const field = plain(Fp);
   const T3 = sameClass(F, [F, C]);
-  const ord = (i: number) => ORDINARY_ROTATION[(seed + i) % ORDINARY_ROTATION.length];
-  const div = DIVISION_ROTATION[seed % DIVISION_ROTATION.length];
-  const varied = VARIED_ROTATION[(seed >>> 3) % VARIED_ROTATION.length];
+  // the player's own geometry (Answers.geom) wins over the family name's; the i-th pick
+  // after it follows the same rotation, so a second ordinary still differs from the first
+  const rot = <T extends string>(list: readonly T[], chosen: string | undefined, i: number, byName: number): T => {
+    const at = chosen ? list.indexOf(chosen as T) : -1;
+    return list[((at >= 0 ? at : byName % list.length) + i) % list.length];
+  };
+  // two bars or three chevronels leave no room for charges: with charges, the fess or chevron they diminish
+  const chargedOrd = geom.ord === "bars" ? "fess" : geom.ord === "chevronels" ? "chevron" : geom.ord;
+  const ord = (i: number) => rot(ORDINARY_ROTATION, chargedOrd, i, seed);
+  const div = rot(DIVISION_ROTATION, geom.div, 0, seed);
+  const varied = rot(VARIED_ROTATION, geom.var, 0, seed >>> 3);
+  // Furs as the 13th-century rolls use them (docs/roll-gaps.md): vair alone or under a plain
+  // ordinary or chief of another colour (Vair, a fess gules — Marmion), fretty mostly alone
+  // (Gules fretty Or — Audley) or under a chief of the fret's tincture (St Amand).
+  const fur = rot(FUR_ROTATION, geom.fur, 0, seed >>> 13);
+  const metal = isMetal(F) ? F : C, colour = isMetal(F) ? C : F;
+  // vair names its metal first (and CK3's vair paints it as color1); fretty its field
+  const furField: Field = fur === "vairy" ? { kind: "vairy", t: [metal, colour] } : { kind: "fretty", t: [F, C] };
+  // on vair: another colour, metal charges on it; on fretty: the fret's tincture, charges in the field's
+  const furChief: [Tincture, Tincture] = fur === "vairy" ? [sameClass(colour, [F, C]), metal] : [C, F];
+  // Semé, as the rolls use it for families: powdered in the tincture of what lies on it
+  // (Gules crusilly, a lion rampant Or; Azure billetty Or, a bend Or; Sable bezanty)
+  const semyId = geom.semy ?? SEMY_BY_NAME[(seed >>> 17) % SEMY_BY_NAME.length];
+  const semyField = (id: ChargeId): Field => ({ kind: "semy", t: F, charge: mk(id, C) });
   const ch = (c: Charge, t: Tincture, count: 1 | 3 | 6 = 1) => mk(c.id, t, count);
   const single = A ?? B;
   const which = new Set<"A" | "B">(A ? ["A"] : ["B"]);
-  // the family name also picks a line of partition for the first ordinary, the chief and the division
+  // the family name also picks a line of partition for the first ordinary, the chief and the
+  // division; a chosen line goes wherever CK3 can draw it, the rest stay straight
   const lineFor = (k: string, salt: number): Line | undefined => {
     const ls = LINES[k];
+    if (geom.line) return geom.line !== "plain" && ls?.includes(geom.line as Line) ? (geom.line as Line) : undefined;
     if (!ls) return undefined;
     const pool = [undefined, ...ls];
     return pool[(seed >>> salt) % pool.length];
@@ -197,6 +229,18 @@ function templates(Fp: Tincture, C: Tincture, A: Charge | undefined, B: Charge |
       label: [m("layout.variedEscutcheon", { d: { div: varied }, a: { charge: single.id } })],
       arms: { field: { kind: varied, t: [F, C] }, charges: [], overall: { kind: "escutcheon", arms: { field: plain(T3), charges: [at("center", ch(single, C))] } } },
     });
+    out.push({
+      id: `fur-chief-${fur}`, style: "patterned", uses: which,
+      label: [m("layout.variedChief", { d: { div: fur }, a: { charge: single.id } })],
+      arms: { field: furField, chief: { t: furChief[0], charges: small(single.id) ? [0, 1, 2].map(() => ch(single, furChief[1])) : [ch(single, furChief[1])] }, charges: [] },
+    });
+    if (single.id !== semyId) {
+      out.push({
+        id: `semy-${semyId}`, style: "patterned", uses: which,
+        label: [m("layout.fieldCharge", { d: { div: `semy_${semyId}` }, a: { charge: single.id } })],
+        arms: { field: semyField(semyId), charges: [at("center", ch(single, C, small(single.id) ? 3 : 1))] },
+      });
+    }
   }
 
   if (A && B) {
@@ -217,6 +261,14 @@ function templates(Fp: Tincture, C: Tincture, A: Charge | undefined, B: Charge |
       label: [m("layout.canton", { a: { charge: big.id }, b: { charge: many.id } })],
       arms: { field, charges: [at("center", ch(big, C))], canton: { t: C, charge: ch(many, F) } },
     });
+    // the second wish powdered over the field, when it is one of the semé charges
+    if ((GEOM.semy as readonly string[]).includes(many.id) && many.id !== big.id) {
+      out.push({
+        id: `semy-${many.id}`, style: "patterned", uses: new Set(["A", "B"]),
+        label: [m("layout.fieldCharge", { d: { div: `semy_${many.id}` }, a: { charge: big.id } })],
+        arms: { field: semyField(many.id), charges: [at("center", ch(big, C, small(big.id) ? 3 : 1))] },
+      });
+    }
     const onKind: OrdinaryKind = ord(0) === "pale" || !ON[ord(0)] ? "fess" : ord(0);
     const onLine = onKind === ord(0) && L0 === "engrailed" ? L0 : undefined;
     if (small(many.id)) {
@@ -249,7 +301,7 @@ function templates(Fp: Tincture, C: Tincture, A: Charge | undefined, B: Charge |
   }
 
   if (!single) {
-    const pord = (i: number) => PLAIN_ORDINARY_ROTATION[(seed + i) % PLAIN_ORDINARY_ROTATION.length];
+    const pord = (i: number) => rot(PLAIN_ORDINARY_ROTATION, geom.ord, i, seed);
     for (const [i, k] of [pord(0), pord(1)].entries()) {
       const line = i === 0 ? lineFor(k, 5) : undefined;
       out.push({ id: `ordinary-${k}`, style: "ordinary", uses: new Set(), label: [m("layout.ordinary", { o: { ord: k, line } })], arms: { field, ordinary: withLine({ kind: k, t: C }, line), charges: [] } });
@@ -257,6 +309,14 @@ function templates(Fp: Tincture, C: Tincture, A: Charge | undefined, B: Charge |
     const divLine = lineFor(div, 9);
     out.push({ id: `division-${div}`, style: "divided", uses: new Set(), label: [m("layout.division", { d: { div, line: divLine } })], arms: { field: withLine({ kind: div, t: [F, C] as [Tincture, Tincture] }, divLine), charges: [] } });
     out.push({ id: `varied-${varied}`, style: "patterned", uses: new Set(), label: [m("layout.division", { d: { div: varied } })], arms: { field: { kind: varied, t: [F, C] }, charges: [] } });
+    out.push({ id: `fur-${fur}`, style: "patterned", uses: new Set(), label: [m("layout.division", { d: { div: fur } })], arms: { field: furField, charges: [] } });
+    if (fur === "vairy") {
+      const k = pord(0);
+      out.push({ id: `fur-${k}-vairy`, style: "patterned", uses: new Set(), label: [m("layout.fieldOrdinary", { d: { div: fur }, o: { ord: k } })], arms: { field: furField, ordinary: { kind: k, t: furChief[0] }, charges: [] } });
+    }
+    out.push({ id: `semy-${semyId}`, style: "patterned", uses: new Set(), label: [m("layout.division", { d: { div: `semy_${semyId}` } })], arms: { field: semyField(semyId), charges: [] } });
+    const so = pord(0);
+    out.push({ id: `semy-${so}-${semyId}`, style: "patterned", uses: new Set(), label: [m("layout.fieldOrdinary", { d: { div: `semy_${semyId}` }, o: { ord: so } })], arms: { field: semyField(semyId), ordinary: { kind: so, t: C }, charges: [] } });
   }
 
   // a chief of the liege (Italian "capo"): the liege's field and charge in chief
@@ -295,6 +355,12 @@ function layoutName(base: Base, arms: Arms): Msg[] {
     const f = own.field;
     const d = f.kind === "plain" || f.kind === "semy" ? "barry" : f.kind;
     main = ["chief", "escutcheon", "canton"].includes(arg) ? m(`lname.varied_${arg}`, { d: { div: d } }) : m("lname.division", { d: { div: d } });
+  } else if (kind === "fur") {
+    const d = own.field.kind as Division;
+    main = own.chief ? m("lname.varied_chief", { d: { div: d } }) : own.ordinary ? m("lname.fieldOrdinary", { d: { div: d }, o: { ord: own.ordinary.kind } }) : m("lname.division", { d: { div: d } });
+  } else if (kind === "semy" && own.field.kind === "semy") {
+    const d = `semy_${own.field.charge.id}`;
+    main = own.ordinary ? m("lname.fieldOrdinary", { d: { div: d }, o: { ord: own.ordinary.kind } }) : own.charges.length ? m("lname.fieldCharge", { d: { div: d } }) : m("lname.division", { d: { div: d } });
   } else if (kind === "division") main = m("lname.division", { d: { div: arg, line: own.field.kind !== "plain" && own.field.kind !== "semy" ? own.field.line : undefined } });
   else main = m(`lname.${base.id.replace("-", "_")}`);
   const q = arms.quarterly ? arms.quarterly.q[0] : arms;
@@ -529,7 +595,7 @@ export function generate(a: Answers): Result {
     const B = secondId ? mk(secondId, C) : undefined;
     const out: Candidate[] = [];
     const grants: { base: Base; v: Variant; weight: number }[] = [];
-    for (const base of templates(F, C, A, B, seed, capo)) {
+    for (const base of templates(F, C, A, B, seed, capo, parseGeom(a.geom))) {
       const variants: Variant[] = [];
       const dropped: Msg[] = [];
       if (A && !base.uses.has("A")) dropped.push(m("drop.charge", { a: { charge: A.id } }));
@@ -676,7 +742,7 @@ export function generate(a: Answers): Result {
     .map((c, i) => ({ c, i }))
     .sort((x, y) => x.c.dropped.length - y.c.dropped.length || styleRank(x.c) - styleRank(y.c) || x.i - y.i)
     .map((x) => x.c)
-    .slice(0, 12);
+    .slice(0, 16);
 
   // keep the layout the player chose: the same candidate, else the same base layout
   // ("chief"), else the same kind ("between-*"), else the first

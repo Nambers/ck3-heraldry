@@ -3,7 +3,7 @@
 // in this folder; the page around them is src/designer/page.ts.
 
 import type { Designer } from "../designer/types.ts";
-import { DEFAULT_ANSWERS, decodeAnswers, encodeAnswers, type Answers } from "./answers.ts";
+import { BLANK_ANSWERS, DEFAULT_ANSWERS, decodeAnswers, encodeAnswers, type Answers } from "./answers.ts";
 import { westForm, setAnswer } from "./form.ts";
 import { generate } from "./generate.ts";
 
@@ -11,6 +11,7 @@ export const WEST: Designer<Answers> = {
   id: "west",
   intro: "app.intro",
   defaults: DEFAULT_ANSWERS,
+  blank: BLANK_ANSWERS,
   encode: encodeAnswers,
   decode: decodeAnswers,
   generate,

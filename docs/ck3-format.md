@@ -54,6 +54,9 @@ rotation=90
 | 斜短带（baton） | `ce_bendlet` 旋转 90° 并缩小 | 旋转时用等比缩放，避开"先转后缩"的变形 |
 | 斜分、斜十字分 | `ce_per_bend`、`ce_per_saltire` | per_bend 的 color1 在右上；反斜分 = per_bend 旋转 90° 并交换颜色 |
 | 白鼬皮 | `ce_ermine` | color1 底、color2 斑点；只用作纯色底和盾头、角区，不用于图案 |
+| 松鼠皮 | `ce_vairy` | 铺满方框；每格 24 px（共 128），第一排顶端在 y = 3 px；color1 的钟朝上，color2 的朝下，隔排错开半格。原版头衔都把金属色放 color1 |
+| 网格 | `ce_fretty` | 铺满方框；color1 底，color2 是两组 45° 的细带，宽 52 px（共 512，沿 x 量），中线在 x ± y = 60.5 + 195k px |
+| 菱形连缀的横带、斜带 | `ce_fess_lozenges`、`ce_bend_lozenges` | 横带：七个竖立的菱形，中心相距 19.17 px（共 128），高 y .281–.719；斜带：同一排转 45°，沿对角线每 15 px 一个，比普通斜带宽一倍 |
 | 四条竖带（阿拉贡） | `ce_ordinary_pales_4` | |
 | 两道横条、三道山形细带、叉形带 | `ce_ordinary_bars_2`、`ce_ordinary_chevron_3`、`ce_ordinary_pall_5` | 横条 y .2–.4、.6–.8；山形细带顶点 y .05/.375/.7，厚 .16 |
 | 带线条的几何图形和分割 | `ce_cross_engrailed` 等，见 [design.md](design.md#线条与细带) | 和直线版本占同样位置；锯齿盾头用只有透明通道的 `ce_chief_indented_alpha` |

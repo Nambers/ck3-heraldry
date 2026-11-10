@@ -57,14 +57,22 @@ export type Division =
   | "bendy"
   | "chequy"
   | "lozengy"
-  | "lozengy_bend";
+  | "lozengy_bend"
+  /** a fur of bell-shaped pieces, metal pointing up; argent and azure is plain "vair" */
+  | "vairy"
+  /** the first tincture fretty of the second (a lattice of interlaced bendlets) */
+  | "fretty";
 
-/** lines of partition other than straight; each is available only where CK3 has a texture (LINES) */
-export type Line = "engrailed" | "indented" | "dancetty" | "embattled" | "nebuly";
+/**
+ * lines of partition other than straight; each is available only where CK3 has a texture (LINES).
+ * "fusilly" is not a line but a fess or bend made of fusils conjoined ("a bend fusilly",
+ * as the 13th-century rolls blazon it): same place, same use, so it is treated as one.
+ */
+export type Line = "engrailed" | "indented" | "dancetty" | "embattled" | "nebuly" | "fusilly";
 export const LINES: Partial<Record<string, Line[]>> = {
   cross: ["engrailed"],
-  fess: ["engrailed", "dancetty"],
-  bend: ["engrailed", "embattled"],
+  fess: ["engrailed", "dancetty", "fusilly"],
+  bend: ["engrailed", "embattled", "fusilly"],
   chief: ["indented"],
   per_fess: ["indented"],
   per_bend: ["nebuly"],

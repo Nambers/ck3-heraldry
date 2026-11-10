@@ -63,6 +63,8 @@ function fieldPhrase(arms: Arms): string {
     const c = locale() === "zh-CN" ? tadj(f.charge.t) + chargeName(f.charge.id) : `${tadj(f.charge.t)} ${chargeName(f.charge.id, 2)}`;
     return t("desc.field.semy", { t: t(`tinct.${f.t}`), c });
   }
+  if (f.kind === "vairy" && f.t[0] === "argent" && f.t[1] === "azure") return t("desc.field.vair");
+  if (f.kind === "fretty") return t("desc.field.fretty", { a: t(`tinct.${f.t[0]}`), b: t(`tinct.${f.t[1]}`) });
   return t("desc.field.div", { d: lined(t(`div.${f.kind}`), f.line), a: t(`tinct.${f.t[0]}`), b: t(`tinct.${f.t[1]}`) });
 }
 

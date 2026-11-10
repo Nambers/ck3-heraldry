@@ -51,11 +51,27 @@ export const FAITH_CHARGES = ["cross", "cross_patty", "cross_potent", "cross_fle
 export const DEEDS = ["none", "crusade", "pilgrimage_santiago", "pilgrimage_rome", "pilgrimage_jerusalem", "service"] as const;
 export const CADENCY = ["none", "label", "crescent", "mullet", "martlet", "annulet", "baton"] as const;
 export const STYLES = ["auto", "simple", "ordinary", "divided", "patterned"] as const;
+/**
+ * What the family name picks by default and the player may pick instead (Answers.geom):
+ * the ordinary, the division, the striped or chequered field, the fur, and the line.
+ * The orders are the name's rotations, so changing them changes every family's arms.
+ */
+export const GEOM = {
+  ord: ["chevron", "fess", "bend", "saltire", "cross", "pale", "pall", "bars", "chevronels"],
+  div: ["per_pale", "per_bend", "quarterly", "per_saltire", "per_fess", "gyronny"],
+  var: ["barry", "paly", "bendy", "chequy", "lozengy", "barry_indented"],
+  fur: ["vairy", "fretty"],
+  /** the charge a field is semé of: crusilly, billetty, bezanty, semé-de-lis */
+  semy: ["cross_crosslet", "billet", "roundel", "fleur"],
+  line: ["plain", "engrailed", "indented", "dancetty", "embattled", "nebuly", "fusilly"],
+} as const;
+export type GeomKey = keyof typeof GEOM;
+export const GEOM_KEYS = Object.keys(GEOM) as GeomKey[];
 /** the questions, grouped by kind (see Cat in legend.ts); the form follows this order */
 export const SECTIONS: { cat: "life" | "choice" | "taste"; questions: (keyof Answers)[] }[] = [
   { cat: "life", questions: ["name", "year", "liege", "rank", "titles", "claim", "deed", "cadency"] },
   { cat: "choice", questions: ["emblem", "origin", "faith"] },
-  { cat: "taste", questions: ["style", "palette"] },
+  { cat: "taste", questions: ["style", "geom", "palette"] },
 ];
 
 export const REGIONS = ["west", "iberia", "italy", "central", "north", "east"] as const;

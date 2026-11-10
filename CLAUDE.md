@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A static site (Vite + TypeScript, no runtime dependencies) that turns questionnaire answers about a family's story into heraldically correct coats of arms, previewed as SVG and exported as Crusader Kings III coat-of-arms code using vanilla textures only. Only the Western rulers designer (`src/west/`) exists so far.
 
-Detailed docs are in Chinese: `CONTRIBUTING.md` (code map and step-by-step recipes for adding a charge, realm, language, example, designer, or background art), `docs/design.md` (data flow, generator, marshalling, layout lint, charge drawing), `docs/ck3-format.md` (CK3 code format, texture channel quirks, in-game verification checklist), `docs/roadmap.md`. Follow the CONTRIBUTING recipes rather than improvising: they list every file that must change together.
+Detailed docs are in Chinese: `CONTRIBUTING.md` (code map and step-by-step recipes for adding a charge, realm, language, example, designer, or background art), `docs/design.md` (data flow, generator, marshalling, layout lint, charge drawing), `docs/ck3-format.md` (CK3 code format, texture channel quirks, in-game verification checklist), `docs/roadmap.md`, `docs/roll-gaps.md` (what 13th-century rolls of arms use that we cannot yet make, ranked; it orders the roadmap). Follow the CONTRIBUTING recipes rather than improvising: they list every file that must change together.
 
 ## Commands
 
@@ -23,6 +23,7 @@ Dev scripts (outputs go to `out/`, which is gitignored):
 - `pnpm examples [zh-CN|en]`: write a fixed set of cases to `out/ex/`
 - `pnpm lint:layouts [N]`: run the layout lint over N random answer sets and summarise; run before and after any generator or layout change and compare
 - `python3 tools/ck3_preview.py out/ex/*.txt -o out/preview.png`, `python3 tools/measure_textures.py ce_xxx`: need a local CK3 install plus Pillow and numpy
+- `python3 tools/roll_gaps.py`: counts which features of the rolls of arms in `fixtures/rolls/` are not yet supported (stdlib only). When you add support for a mechanism, update its status in that file and rerun to refresh `docs/roll-gaps.md`
 
 Tests that read real game files (`test/dds.test.ts`, texture-name checks) locate CK3 through `CK3_GAME` (`.../Crusader Kings III/game`) or the default Steam paths (`test/ck3-game.ts`), and skip without it.
 
@@ -51,7 +52,7 @@ SVG and CK3 code come from the same `layout()` result, so positions always match
 
 - Correct by construction: tinctures are assigned by role so candidates never violate the rule of tincture. When wishes conflict, every valid solution becomes its own candidate, and wishes that could not fit go into `dropped` (shown to the user) rather than being forced in.
 - Candidates have stable layout ids (e.g. `chief#0`) stored in the answers, so the user's pick survives other answer changes.
-- The family name deterministically picks the default ordinary, division, and line variant.
+- The family name deterministically picks the default ordinary, division, variation, fur, semé, and line; the player can choose each instead (`Answers.geom`, options in `GEOM` in `src/west/questions.ts`). Changing those rotations changes many families' default arms; old share links are not guaranteed to stay the same for now. Pin examples with `geom` so they do not depend on the name.
 - "No regard for history" mode (`Answers.free`) lifts the era, rank, and tincture restrictions but never CK3's technical limits. CK3 cannot clip layers, so only arms passing `escutcheonSafe()` may go on an escutcheon. Historical realm arms are used as-is, and rule checks skip quarters and escutcheons marked as a realm's.
 - Generators emit i18n messages (`Msg`: key + params), never text. Grammar that differs between languages (Chinese measure words, plurals, articles) lives in `src/describe.ts`.
 
