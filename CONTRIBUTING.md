@@ -11,7 +11,7 @@
 ```sh
 pnpm install
 pnpm dev      # http://localhost:5173
-pnpm check    # 类型检查 + 全部测试，约一分钟
+pnpm check    # 类型检查 + 全部测试，约半分钟
 ```
 
 装了 CK3 的话，可以用游戏贴图预览，并运行读取游戏文件的测试。游戏装在 Steam 默认位置时会被自动找到，否则把 `CK3_GAME` 设为 `.../Crusader Kings III/game`。Python 工具还需要 Pillow 和 numpy。没有游戏也能做大部分贡献，相关测试会自动跳过。

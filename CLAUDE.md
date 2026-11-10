@@ -10,7 +10,7 @@ Detailed docs are in Chinese: `CONTRIBUTING.md` (code map and step-by-step recip
 
 ```sh
 pnpm dev                          # http://localhost:5173
-pnpm check                        # tsc --noEmit + vitest run (~1 min); CI runs typecheck, test, build, then deploys `main` to GitHub Pages
+pnpm check                        # tsc --noEmit + vitest run (~30 s); CI runs typecheck, test, build, then deploys `main` to GitHub Pages
 pnpm vitest run test/rules.test.ts          # one test file
 pnpm vitest run test/rules.test.ts -t "<name>"  # one test
 pnpm build && pnpm preview        # static build to dist/, served on :4719

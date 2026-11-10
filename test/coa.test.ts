@@ -37,7 +37,8 @@ describe("CK3 coat-of-arms code", () => {
 
   it("reads rotation, mirroring and emblems without an instance", () => {
     const coa = parseCoa(readFileSync(join(DIR, "transforms.txt"), "utf8"));
-    expect(coa.emblems[0].instances.length).toBeLessThanOrEqual(1);
+    // kept as written: no instance (the game draws it once, centred, full size)
+    expect(coa.emblems[0].instances).toEqual([]);
     expect(coa.emblems[1].instances[0]).toEqual({ position: [0.5, 0.5], scale: [0.75, 0.75], rotation: 90 });
     expect(coa.emblems[2].instances[0].scale).toEqual([-0.3, 0.3]);
     expect(coa.emblems[2].instances[1].rotation).toBe(45);

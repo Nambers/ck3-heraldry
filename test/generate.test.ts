@@ -10,7 +10,7 @@ import { lintArms } from "../src/lint.ts";
 import { LOCALES, setLocale } from "../src/i18n/index.ts";
 import { DEFAULT_ANSWERS, PALETTES, decodeAnswers, encodeAnswers, partsString, type Answers } from "../src/west/answers.ts";
 import { TINCTURES } from "../src/heraldry/tincture.ts";
-import { generate, hash } from "../src/west/generate.ts";
+import { generate, hash, type Result } from "../src/west/generate.ts";
 import { CADENCY, DEEDS, EMBLEM_FAMILIES, FAITH_CHARGES, ORIGIN_GROUPS, PARTS, STYLES } from "../src/west/questions.ts";
 import { RANKS, REALM_IDS, canHold, type Rank } from "../src/realms.ts";
 import { renderSvg } from "../src/render/svg.ts";
@@ -54,22 +54,43 @@ function* sample(n: number): Generator<Answers> {
   }
 }
 
+// every texture name in TEX: the patterns, and the emblems besides the charges' own
+const texNames = (o: unknown): string[] =>
+  typeof o === "string" ? [o] : o && typeof o === "object" ? Object.values(o).flatMap(texNames) : [];
+const ALLOWED_PATTERNS = new Set<string>([TEX.patternSolid, ...Object.values(TEX.patterns)]);
 const ALLOWED_TEXTURES = new Set<string>([
-  TEX.block, TEX.escutcheon.texture, TEX.label.texture, TEX.pallets4.texture, TEX.fess, TEX.pale, TEX.bend, TEX.bendSinister, TEX.saltire,
-  TEX.chevron, TEX.pile, TEX.orle, TEX.tressure, TEX.bendlet, TEX.halo, TEX.perBend, TEX.perSaltire, TEX.gyronny, TEX.bendy, TEX.lozengy, TEX.lozengyBend, TEX.ermine,
-  TEX.barryIndented, TEX.bars, TEX.chevronels, TEX.pall, ...Object.values(TEX.line),
+  ...texNames(TEX).filter((t) => !ALLOWED_PATTERNS.has(t)),
   ...Object.values(CHARGES).flatMap((c) => c.ck3.map((p) => p.texture)),
 ]);
-const ALLOWED_PATTERNS = new Set<string>([TEX.patternSolid, ...Object.values(TEX.patterns)]);
+// raster charges are hundreds of blocks each: not held to the layer budget (the page warns instead)
+const RASTER = Object.keys(CHARGES).filter((id) => CHARGES[id].raster);
+const isRaster = (arms: Arms) => {
+  const s = JSON.stringify(arms);
+  return RASTER.some((id) => s.includes(`"id":"${id}"`));
+};
 const KEY_LEAK = /\b(app|q|fam|region|num|tinct|tadj|charge|div|ord|layout|place|drop|rule|desc|note|realm)\.[a-z_]+(\.[a-z_]+)*\b/;
+
+/** freeze a result all the way down, so a test that changed it would throw instead of feeding the others */
+const deepFreeze = <T,>(o: T): T => {
+  if (o && typeof o === "object" && !Object.isFrozen(o)) {
+    Object.freeze(o);
+    for (const v of Object.values(o)) deepFreeze(v);
+  }
+  return o;
+};
 
 describe("generator", () => {
   const all = [...sample(4000)];
+  // each sampled answer set is generated once, on first use, and shared by the tests below
+  // (generate() returns messages, not text, so the locale does not change the result)
+  const cache: Result[] = [];
+  const sampled = (keep: (a: Answers, i: number) => boolean = () => true) =>
+    all.flatMap((a, i) => (keep(a, i) ? [{ a, r: (cache[i] ??= deepFreeze(generate(a))) }] : []));
+  const every = (n: number) => sampled((_, i) => i % n === 0);
 
   it(`always yields legal arms (${all.length} sampled answer sets)`, { timeout: 60_000 }, () => {
     let n = 0;
-    for (const a of all) {
-      const r = generate(a);
+    for (const { a, r } of sampled()) {
       expect(r.candidates.length, JSON.stringify(a)).toBeGreaterThan(0);
       for (const c of r.candidates) {
         expect(checkArms(c.arms).filter((i) => i.level === "error"), `${c.id} ${JSON.stringify(a)}`).toEqual([]);
@@ -80,11 +101,9 @@ describe("generator", () => {
   });
 
   it("exports parseable CK3 code with vanilla textures and a sane layer count", { timeout: 60_000 }, () => {
-    // raster charges are hundreds of blocks each: not held to the budget (the page warns instead)
-    const isRaster = (arms: Arms) => Object.keys(CHARGES).some((id) => CHARGES[id].raster && JSON.stringify(arms).includes(`"id":"${id}"`));
     let max = 0;
-    for (const a of all.filter((_, i) => i % 4 === 0)) {
-      for (const c of generate(a).candidates) {
+    for (const { r } of every(4)) {
+      for (const c of r.candidates) {
         const { coa, instances } = exportCk3(c.arms);
         const back = parseCoa(serializeCoa(coa));
         expect(back.emblems.reduce((s, e) => s + e.instances.length, 0)).toBe(instances);
@@ -101,30 +120,30 @@ describe("generator", () => {
 
   it.each(LOCALES)("writes complete text in %s (no holes, no raw keys)", (loc) => {
     setLocale(loc);
-    for (const a of all.filter((_, i) => i % 9 === 0)) {
-      const r = generate(a);
-      const texts = [...r.notes.map((n) => fmt(n.msg)), ...r.legend.flatMap((row) => [fmt(row.what), fmt(row.means)])];
-      for (const c of r.candidates) texts.push(fmtList(c.label), fmtList(c.dropped), fmtList(c.warnings ?? []), describeArms(c.arms), blazon(c.arms));
-      for (const s of texts) {
-        expect(s).not.toMatch(/undefined|NaN|\{\w+\}/);
-        expect(s, s).not.toMatch(KEY_LEAK);
+    try {
+      for (const { r } of every(9)) {
+        const texts = [...r.notes.map((n) => fmt(n.msg)), ...r.legend.flatMap((row) => [fmt(row.what), fmt(row.means)])];
+        for (const c of r.candidates) {
+          texts.push(c.name.map(fmt).join(" "), fmtList(c.label), fmtList(c.dropped), fmtList(c.warnings ?? []), describeArms(c.arms), blazon(c.arms));
+        }
+        for (const s of texts) {
+          expect(s).not.toMatch(/undefined|NaN|\{\w+\}/);
+          expect(s, s).not.toMatch(KEY_LEAK);
+        }
       }
+    } finally {
+      setLocale("zh-CN");
     }
-    setLocale("zh-CN");
   });
 
   it("lays out every candidate without overlaps or cut-off charges", { timeout: 60_000 }, () => {
-    for (const a of all.filter((_, i) => i % 3 === 0)) {
-      for (const c of generate(a).candidates) expect(lintArms(c.arms), `${c.id} ${JSON.stringify(a)}`).toEqual([]);
+    for (const { a, r } of every(3)) {
+      for (const c of r.candidates) expect(lintArms(c.arms), `${c.id} ${JSON.stringify(a)}`).toEqual([]);
     }
   });
 
-  it("names every layout", () => {
-    for (const a of all.filter((_, i) => i % 10 === 0)) for (const c of generate(a).candidates) expect(c.name.map(fmt).join(" ")).not.toMatch(KEY_LEAK);
-  });
-
   it("renders SVG without holes", () => {
-    for (const a of all.filter((_, i) => i % 25 === 0)) for (const c of generate(a).candidates) expect(renderSvg(c.arms)).not.toMatch(/undefined|NaN/);
+    for (const { r } of every(25)) for (const c of r.candidates) expect(renderSvg(c.arms)).not.toMatch(/undefined|NaN/);
   });
 
   it("is deterministic and survives the URL", () => {
@@ -182,7 +201,7 @@ describe("generator", () => {
       for (const p of a.charges) if (p.charge.breast && "kind" in p.charge.breast && !escutcheonSafe(p.charge.breast.arms)) return false;
       return (a.quarterly?.q ?? []).every(check);
     };
-    for (const a of all.filter((_, i) => i % 3 === 0)) for (const c of generate(a).candidates) expect(check(c.arms), JSON.stringify(a)).toBe(true);
+    for (const { a, r } of every(3)) for (const c of r.candidates) expect(check(c.arms), JSON.stringify(a)).toBe(true);
   });
 
   it("keeps the chosen layout when other answers change", () => {
@@ -261,8 +280,8 @@ describe("generator", () => {
   });
 
   it("never lets a cadency mark overlap the top of the shield", { timeout: 60_000 }, () => {
-    for (const a of all.filter((x) => x.cadency !== "none" && x.cadency !== "baton")) {
-      for (const c of generate(a).candidates) {
+    for (const { r } of sampled((a) => a.cadency !== "none" && a.cadency !== "baton")) {
+      for (const c of r.candidates) {
         if (!c.arms.brisure) continue;
         const top = c.arms.quarterly ? c.arms.quarterly.q[0] : c.arms;
         expect(!!top.chief || !!top.canton || top.charges.some((p) => p.at === "between" || p.at === "dexter_chief")).toBe(false);
