@@ -1,0 +1,36 @@
+# Written for this project in the format the in-game designer exports.
+coa_house_1234={
+pattern="pattern_solid.dds"
+color1=blue
+color2=white
+color3=black
+colored_emblem={
+color1=yellow
+texture="ce_fleur.dds"
+instance={
+position={ 0.300000 0.300000 }
+scale={ 0.250000 0.250000 }
+depth=3.010000
+}
+instance={
+position={ 0.700000 0.300000 }
+scale={ 0.250000 0.250000 }
+depth=2.010000
+}
+instance={
+position={ 0.500000 0.680000 }
+scale={ 0.250000 0.250000 }
+depth=1.010000
+}
+}
+colored_emblem={
+color1=white
+color2=red
+texture="ce_circle_mask.dds"
+instance={
+position={ 0.500000 0.500000 }
+scale={ 0.900000 0.900000 }
+depth=4.010000
+}
+}
+}

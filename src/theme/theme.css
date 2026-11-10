@@ -1,0 +1,556 @@
+/*
+ * Art direction: the pages as the objects of medieval heraldry, and behind
+ * them pictures from the world each page belongs to.
+ *
+ *   scenes    paintings made in CK3's years (867–1453), one in each margin,
+ *             turned into ink (./art/: the paper made transparent, the lines
+ *             and shading kept) and printed in this page's own ink, so a
+ *             Persian miniature, a Song scroll and a Gothic manuscript read as
+ *             drawings in one book. The home page shows the pictures of the page the choice
+ *             leads to, cross-faded (src/theme/scene.ts); a portolan chart
+ *             when nothing is planned for the choice. Sources and licences:
+ *             src/theme/art/credits.ts, shown on the license page.
+ *   west      a manuscript leaf: ruled panels with rubricated initials, the
+ *             arms shown as a framed miniature
+ *   examples  an armorial roll laid on the desk
+ *   rules     a treatise page with a red double margin
+ *   license   a charter: one folded sheet
+ *
+ * The router sets <body data-view="…">; each view names its scene. Patterns
+ * (./motifs/) are our own drawings, used as masks so their colour comes from
+ * the tokens below (light and dark alike).
+ */
+
+:root {
+  /* the pigments of a manuscript */
+  --vellum: #eee4cd;
+  --vellum-deep: #ddcda9;
+  --leaf: #f8f2e3;
+  --rubric: #9e2d1c; /* red lead */
+  --lapis: #2b4a86; /* ultramarine */
+  --gold: #a9853c; /* shell gold */
+  --rule: #cdb98f; /* ruling, dry-point */
+  --texture-ink: #6b4a22;
+  --texture-alpha: 0.4;
+  --ground: #263553; /* behind the arms in a miniature */
+
+  --bg: var(--vellum);
+  --panel: var(--leaf);
+  --line: var(--rule);
+  /* darker than before: grey text sits on a textured ground, keep it at 4.5:1 or better */
+  --muted: #574d40;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* the same book by candlelight */
+  :root {
+    --vellum: #1d1812;
+    --vellum-deep: #14100c;
+    --leaf: #28211a;
+    --rubric: #e08a6c;
+    --lapis: #93b1e8;
+    --gold: #d4b066;
+    --rule: #4b3e2d;
+    --texture-ink: #f1dcb4;
+    --texture-alpha: 0.22;
+    --ground: #1a2338;
+    --muted: #a69c8b;
+  }
+}
+
+/* ---------------------------------------------------------------- the page ground */
+
+html {
+  background: var(--bg);
+}
+body {
+  /* the ground is painted by the layers below, behind everything */
+  background: transparent;
+  min-height: 100vh;
+}
+/* grain and mottling of the skin */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: var(--texture-ink);
+  opacity: var(--texture-alpha);
+  -webkit-mask: url("./motifs/grain.svg") 0 0 / 220px 220px, url("./motifs/mottle.svg") 0 0 / 700px 700px;
+  mask: url("./motifs/grain.svg") 0 0 / 220px 220px, url("./motifs/mottle.svg") 0 0 / 700px 700px;
+}
+
+/* ---------------------------------------------------------------- scenes */
+
+/* half the width of the page's text; the pictures stand just outside it */
+body {
+  --content-half: 610px;
+}
+body[data-view="home"] {
+  --content-half: 450px;
+}
+#scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.scene {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+  --art-ink: var(--texture-ink);
+  --art-alpha: 0.6;
+}
+.scene.on {
+  opacity: 1;
+}
+/* one picture in each margin, against the text but never under it, shown whole
+   at its own proportions: the picture is the mask, the ink is ours, and an oval
+   fade leaves no edge to see */
+.scene::before,
+.scene::after {
+  content: "";
+  position: absolute;
+  bottom: 3vh;
+  aspect-ratio: var(--ratio);
+  /* as wide as the margin allows, but never taller than the window or larger than the picture */
+  width: min(calc(50% - var(--content-half) - 28px), 520px, calc(88vh * var(--ratio)));
+  background: var(--art-ink);
+  opacity: var(--art-alpha);
+  -webkit-mask: var(--art) center / 100% 100% no-repeat, radial-gradient(closest-side, #000 60%, transparent);
+  -webkit-mask-composite: source-in;
+  mask: var(--art) center / 100% 100% no-repeat, radial-gradient(closest-side, #000 60%, transparent);
+  mask-composite: intersect;
+}
+.scene::before {
+  right: calc(50% + var(--content-half) + 28px);
+  --art: var(--art-l);
+  --ratio: var(--ratio-l, 0.7);
+}
+.scene::after {
+  left: calc(50% + var(--content-half) + 28px);
+  --art: var(--art-r);
+  --ratio: var(--ratio-r, 0.7);
+}
+@media (prefers-color-scheme: dark) {
+  /* by candlelight the ink is pale */
+  .scene {
+    --art-alpha: 0.3;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene {
+    transition: none;
+  }
+}
+/* margins too narrow for a picture: leave them out (the designer's text is wider) */
+@media (max-width: 1300px) {
+  .scene::before,
+  .scene::after {
+    display: none;
+  }
+}
+@media (max-width: 1640px) {
+  body[data-view="west"] .scene::before,
+  body[data-view="west"] .scene::after {
+    display: none;
+  }
+}
+
+/* the pictures and their proportions (width / height of the file) */
+.scene[data-scene="west"] {
+  --art-l: url("./art/west-l.webp");
+  --ratio-l: 779 / 1100;
+  --art-r: url("./art/west-r.webp");
+  --ratio-r: 694 / 1100;
+}
+.scene[data-scene="clergy"] {
+  --art-l: url("./art/clergy-l.webp");
+  --ratio-l: 704 / 1100;
+  --art-r: url("./art/clergy-r.webp");
+  --ratio-r: 705 / 1100;
+}
+.scene[data-scene="merchant"] {
+  --art-l: url("./art/merchant-l.webp");
+  --ratio-l: 543 / 760;
+  --art-r: url("./art/merchant-r.webp");
+  --ratio-r: 503 / 740;
+}
+.scene[data-scene="byzantium"] {
+  --art-l: url("./art/byzantium-l.webp");
+  --ratio-l: 880 / 819;
+  --art-r: url("./art/byzantium-r.webp");
+  --ratio-r: 760 / 686;
+}
+.scene[data-scene="islam"] {
+  --art-l: url("./art/islam-l.webp");
+  --ratio-l: 1108 / 1100;
+  --art-r: url("./art/islam-r.webp");
+  --ratio-r: 871 / 1100;
+}
+.scene[data-scene="steppe"] {
+  --art-l: url("./art/steppe-l.webp");
+  --ratio-l: 880 / 982;
+  --art-r: url("./art/steppe-r.webp");
+  --ratio-r: 800 / 1044;
+}
+.scene[data-scene="india"] {
+  --art-l: url("./art/india-l.webp");
+  --ratio-l: 404 / 548;
+  --art-r: url("./art/india-r.webp");
+  --ratio-r: 885 / 1100;
+}
+.scene[data-scene="china"] {
+  --art-l: url("./art/china-l.webp");
+  --ratio-l: 592 / 1100;
+  --art-r: url("./art/china-r.webp");
+  --ratio-r: 626 / 1100;
+}
+.scene[data-scene="japan"] {
+  --art-l: url("./art/japan-l.webp");
+  --ratio-l: 1174 / 1100;
+  --art-r: url("./art/japan-r.webp");
+  --ratio-r: 820 / 842;
+}
+
+/* nothing planned for the choice: a portolan chart, its rhumb lines kept to the margins */
+.scene[data-scene="portolan"]::before {
+  inset: 0;
+  width: auto;
+  height: auto;
+  aspect-ratio: auto;
+  background: var(--rubric);
+  opacity: 0.18;
+  -webkit-mask: url("./motifs/portolan.svg") center / cover no-repeat,
+    linear-gradient(90deg, #000 calc(50% - 600px), transparent calc(50% - 450px), transparent calc(50% + 450px), #000 calc(50% + 600px));
+  mask: url("./motifs/portolan.svg") center / cover no-repeat,
+    linear-gradient(90deg, #000 calc(50% - 600px), transparent calc(50% - 450px), transparent calc(50% + 450px), #000 calc(50% + 600px));
+  /* (the shorthand above resets this) */
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+.scene[data-scene="portolan"]::after {
+  display: none;
+}
+@media (max-width: 1300px) {
+  .scene[data-scene="portolan"]::before {
+    display: block;
+  }
+}
+
+/* ---------------------------------------------------------------- west: a manuscript leaf */
+
+/* question panels: a ruled frame (double rule) on a fresh leaf, square like a manuscript */
+/* (the left edge keeps its colour: life / choice / taste) */
+body[data-view="west"] .q {
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 3px var(--leaf), inset 0 0 0 4px color-mix(in srgb, var(--rule) 70%, transparent);
+}
+/* rubrication: the first letter of each question in red lead or ultramarine, by turns */
+body[data-view="west"] .q legend::first-letter {
+  font-size: 1.3em;
+  color: var(--rubric);
+}
+body[data-view="west"] .q:nth-of-type(even) legend::first-letter {
+  color: var(--lapis);
+}
+
+/* the result: a leaf ruled in gold */
+body[data-view="west"] .result {
+  border-radius: 2px;
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 3px var(--leaf), inset 0 0 0 4px color-mix(in srgb, var(--gold) 55%, transparent);
+}
+
+/* the arms as a miniature: a gold-framed panel on a diapered ultramarine ground */
+body[data-view="west"] .result .shield {
+  position: relative;
+  isolation: isolate;
+  margin: 4px auto 6px;
+  width: fit-content;
+  padding: 22px 30px 20px;
+  background: var(--ground);
+  border: 2px solid var(--gold);
+  outline: 1px solid var(--gold);
+  outline-offset: 3px;
+}
+body[data-view="west"] .result .shield::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--gold);
+  opacity: 0.45;
+  -webkit-mask: url("./motifs/diaper.svg") center / 24px 24px;
+  mask: url("./motifs/diaper.svg") center / 24px 24px;
+}
+body[data-view="west"] .result .shield svg {
+  width: min(260px, 62vw);
+}
+body[data-view="west"] .result .shield canvas {
+  width: min(260px, 62vw);
+  height: auto;
+}
+
+/* candidates and saved designs: small ruled frames */
+body[data-view="west"] .alt,
+body[data-view="west"] .svload {
+  border-radius: 2px;
+}
+body[data-view="west"] .alt.on {
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 2px var(--leaf), inset 0 0 0 3px var(--gold);
+}
+
+/* ---------------------------------------------------------------- reading pages: a sheet on the desk */
+
+body[data-view="examples"],
+body[data-view="rules"],
+body[data-view="license"] {
+  --bg: var(--vellum-deep);
+}
+body[data-view="examples"] .page,
+body[data-view="rules"] .page,
+body[data-view="license"] .page {
+  position: relative;
+  isolation: isolate;
+  margin: 14px auto 36px;
+  padding: 30px 44px 44px;
+  background: var(--vellum);
+  box-shadow:
+    0 1px 2px rgb(40 25 10 / 0.18),
+    0 12px 30px -12px rgb(40 25 10 / 0.35);
+}
+/* the sheet has its own grain */
+body[data-view="examples"] .page::before,
+body[data-view="rules"] .page::before,
+body[data-view="license"] .page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--texture-ink);
+  opacity: calc(var(--texture-alpha) * 0.8);
+  -webkit-mask: url("./motifs/grain.svg") 0 0 / 220px 220px;
+  mask: url("./motifs/grain.svg") 0 0 / 220px 220px;
+  pointer-events: none;
+}
+
+/* examples: an armorial roll — the edges curl, the entries are ruled off */
+body[data-view="examples"] .page {
+  background:
+    linear-gradient(90deg, rgb(60 35 10 / 0.16), transparent 18px, transparent calc(100% - 18px), rgb(60 35 10 / 0.16)),
+    var(--vellum);
+}
+body[data-view="examples"] .excard {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  border-radius: 0;
+  background: transparent;
+  padding: 16px 4px 12px;
+}
+body[data-view="examples"] .excard:target {
+  box-shadow: inset 3px 0 0 var(--rubric);
+}
+body[data-view="examples"] .excard h3 {
+  color: var(--rubric);
+}
+/* each coat on its own small diapered ground, as painted in a roll */
+body[data-view="examples"] .exshield {
+  position: relative;
+  isolation: isolate;
+  padding: 8px;
+  background: var(--ground);
+  border: 1px solid var(--gold);
+  align-self: start;
+}
+body[data-view="examples"] .exshield::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--gold);
+  opacity: 0.4;
+  -webkit-mask: url("./motifs/diaper.svg") center / 16px 16px;
+  mask: url("./motifs/diaper.svg") center / 16px 16px;
+}
+body[data-view="examples"] .exshield,
+body[data-view="examples"] .exshield svg {
+  width: 104px;
+}
+body[data-view="examples"] .exshield svg {
+  width: 88px;
+  margin: 0 auto;
+}
+
+/* rules: a treatise — a red double margin (no ruling across the text) */
+body[data-view="rules"] .page {
+  background:
+    linear-gradient(90deg, transparent 22px, color-mix(in srgb, var(--rubric) 45%, transparent) 22px 23px, transparent 23px 26px, color-mix(in srgb, var(--rubric) 45%, transparent) 26px 27px, transparent 27px),
+    var(--vellum);
+}
+body[data-view="rules"] .page table {
+  border-top: 3px double var(--rubric);
+  border-bottom: 3px double var(--rubric);
+}
+
+/* license: a charter folded in three and once across */
+body[data-view="license"] .page {
+  background:
+    linear-gradient(90deg, transparent calc(33.3% - 1px), rgb(60 35 10 / 0.1) calc(33.3%), transparent calc(33.3% + 2px)),
+    linear-gradient(90deg, transparent calc(66.6% - 1px), rgb(60 35 10 / 0.1) calc(66.6%), transparent calc(66.6% + 2px)),
+    linear-gradient(180deg, transparent calc(50% - 1px), rgb(60 35 10 / 0.1) 50%, transparent calc(50% + 2px)),
+    var(--vellum);
+}
+
+/* the licence text itself: written on the charter, in a ruled box */
+body[data-view="license"] .page pre {
+  background: var(--leaf);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 3px var(--leaf), inset 0 0 0 4px color-mix(in srgb, var(--rule) 70%, transparent);
+  padding: 16px 18px;
+}
+
+/* ---------------------------------------------------------------- materials of the traditions (home) */
+
+/* each destination shows a swatch of its own material; planned ones too */
+[data-tradition] {
+  --mat-bg: var(--vellum-deep);
+  --mat-ink: transparent;
+  --mat: none;
+}
+[data-tradition="west"] {
+  --mat-bg: #26406f;
+  --mat-ink: #d8b25e;
+  --mat: url("./motifs/diaper.svg") center / 18px 18px;
+}
+[data-tradition="clergy"] {
+  /* quarry glazing: leaded panes */
+  --mat-bg: linear-gradient(160deg, #5b2a6e, #2e4f8f 55%, #7a2a2a);
+  --mat-ink: #1a1218;
+  --mat: url("./motifs/quarry.svg") center / 15px 20px;
+}
+[data-tradition="merchant"] {
+  /* a merchant's mark, as stamped on a bale of sackcloth */
+  --mat-bg: #b69c6c;
+  --mat-ink: #3a2716;
+  --mat: url("./motifs/merchantmark.svg") center / 18px 22px;
+}
+[data-tradition="byzantium"] {
+  --mat-bg: #4f1733;
+  --mat-ink: #d9b45a;
+  --mat: url("./motifs/tesserae.svg") center / 15px 15px;
+}
+[data-tradition="islam"] {
+  --mat-bg: #0f5249;
+  --mat-ink: #e6d6a8;
+  --mat: url("./motifs/girih.svg") center / 26px 26px;
+}
+[data-tradition="steppe"] {
+  /* felt with the ram's-horn ornament of the steppe */
+  --mat-bg: #7d5b3c;
+  --mat-ink: #efe1c3;
+  --mat: url("./motifs/ramhorn.svg") center / 20px 20px;
+}
+[data-tradition="india"] {
+  /* a block-printed cotton */
+  --mat-bg: #9c3420;
+  --mat-ink: #f0dcb2;
+  --mat: url("./motifs/buti.svg") center / 26px 26px;
+}
+[data-tradition="china"] {
+  --mat-bg: #a32418;
+  --mat-ink: #e7c46a;
+  --mat: url("./motifs/meander.svg") center / 14px 14px;
+}
+[data-tradition="japan"] {
+  /* kikkō, the tortoise-shell lattice, on indigo */
+  --mat-bg: #213659;
+  --mat-ink: #d9e2ee;
+  --mat: url("./motifs/kikko.svg") center / 16px 28px;
+}
+
+/* the destination card: a swatch of the material down its left edge */
+.page .dest[data-tradition] {
+  position: relative;
+  padding-left: calc(18px + 92px);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.page .dest[data-tradition]::before,
+.page .dest[data-tradition]::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 92px;
+}
+.page .dest[data-tradition]::before {
+  background: var(--mat-bg);
+  border-right: 1px solid var(--rule);
+}
+.page .dest[data-tradition]::after {
+  background: var(--mat-ink);
+  -webkit-mask: var(--mat);
+  mask: var(--mat);
+}
+.page .dest.none {
+  border-radius: 2px;
+}
+/* the list of all pages: a small swatch before each */
+.page .destlist li[data-tradition] {
+  position: relative;
+  padding-left: 34px;
+}
+.page .destlist li[data-tradition]::before,
+.page .destlist li[data-tradition]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  width: 22px;
+  height: 22px;
+}
+.page .destlist li[data-tradition]::before {
+  background: var(--mat-bg);
+  outline: 1px solid var(--rule);
+}
+.page .destlist li[data-tradition]::after {
+  background: var(--mat-ink);
+  -webkit-mask: var(--mat);
+  mask: var(--mat);
+}
+
+/* ---------------------------------------------------------------- quieter when asked */
+
+@media (max-width: 600px) {
+  body[data-view="examples"] .page,
+  body[data-view="rules"] .page,
+  body[data-view="license"] .page {
+    margin: 8px 8px 24px;
+    padding: 22px 18px 30px;
+  }
+  .page .dest[data-tradition] {
+    padding-left: calc(14px + 56px);
+  }
+  .page .dest[data-tradition]::before,
+  .page .dest[data-tradition]::after {
+    width: 56px;
+  }
+}
+@media (prefers-contrast: more) {
+  body::before,
+  body::after {
+    display: none;
+  }
+}
+@media print {
+  body::before,
+  body::after {
+    display: none;
+  }
+}

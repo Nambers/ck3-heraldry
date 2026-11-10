@@ -1,0 +1,31 @@
+{
+  "name": "ck3-heraldry",
+  "private": true,
+  "license": "MIT",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Questionnaire-driven, heraldically correct coats of arms for Crusader Kings III (paste-in code, no mod).",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4719",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "check": "tsc --noEmit && vitest run",
+    "art:index": "node scripts/gen-art-index.ts",
+    "art:sheet": "node scripts/art-sheet.ts",
+    "art:grid": "node scripts/art-grid.ts",
+    "examples": "node scripts/examples.ts",
+    "lint:layouts": "node scripts/lint-layouts.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
+  }
+}

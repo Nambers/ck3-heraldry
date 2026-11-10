@@ -1,0 +1,1028 @@
+{
+  "app": {
+    "title": "CK3 Heraldry Workshop",
+    "intro": "Answer a few questions about your family's story and get a coat of arms that follows real heraldic rules. Copy the code and paste it into the game — no mod needed.",
+    "footer": "By default the preview uses this project's own simplified drawings; load your local game textures to see exactly what the game will show. The generated code only uses vanilla textures.",
+    "alternatives": "Legal layouts ({n})",
+    "alternativesFree": "Layouts ({n})",
+    "notes": "Notes",
+    "code": "CK3 code",
+    "codeHow": "Copy it, then press \"Paste\" in the game's coat of arms designer. Vanilla textures only, {n} layers.",
+    "codeMany": "Many layers ({n}): these arms include a charge built from blocks. The game reads it fine, but screens showing these arms may slow down on weaker computers.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Copy failed — select it manually",
+    "blazonTag": "blazon",
+    "arms": "Family arms",
+    "armsOf": "Arms of {name}",
+    "namePlaceholder": "e.g. Hauteville",
+    "dropped": "This layout has no room for: {list}",
+    "langName": "English",
+    "langShort": "EN",
+    "source": "Source code on GitHub",
+    "reset": "Start over",
+    "resetHint": "Clear all answers (the browser's Back button brings them back)",
+    "noteKind": {
+      "history": "History",
+      "heraldry": "Heraldry",
+      "ck3": "CK3"
+    },
+    "preview": {
+      "svg": "Sketch",
+      "game": "Game textures",
+      "load": "Load game textures",
+      "loading": "Reading textures…",
+      "help": "Choose the gfx/coat_of_arms folder inside the game directory (e.g. Steam/steamapps/common/Crusader Kings III/game/gfx/coat_of_arms). The browser will say \"upload\", but the files are only read locally and never sent anywhere.",
+      "loaded": "{n} textures loaded",
+      "error": "No textures found — make sure you picked the gfx/coat_of_arms folder.",
+      "missing": "Missing textures: {list}",
+      "helpPick": "Choose the game directory (or its gfx/coat_of_arms folder), e.g. Steam/steamapps/common/Crusader Kings III/game. The textures are only read on this computer and never sent anywhere; the browser remembers the folder for next time.",
+      "loadedFrom": "{n} textures loaded from “{name}”",
+      "reconnect": "Load the game folder used last time (“{name}”)",
+      "forget": "forget this folder"
+    },
+    "texTip": {
+      "title": "Sketch and game textures",
+      "sketch": "What you see now is this site's own sketch, for the structure: the layout, where each charge sits, its size and its colours. The drawings themselves are not the game's.",
+      "why": "For copyright reasons the site cannot include Crusader Kings III's textures (they belong to Paradox). Load the textures from your own game and the preview is drawn with them, just as you will see it in the game.",
+      "pick": "Choose the game folder",
+      "pickFolder": "Choose the gfx/coat_of_arms folder",
+      "later": "Use the sketch for now",
+      "never": "Don't show this again",
+      "lang": "Language"
+    },
+    "since": " (arms from {y})",
+    "layoutNameSep": " · ",
+    "save": {
+      "title": "Saved arms ({n})",
+      "local": "Saved designs stay in this browser only; to move them to another device or send them to someone, use a share link.",
+      "name": "Save as",
+      "placeholder": "Name these arms",
+      "button": "Save in this browser",
+      "saved": "Saved “{name}”",
+      "replaced": "Updated “{name}”",
+      "failed": "This browser does not allow local saving (private mode?). A share link works instead.",
+      "empty": "Nothing saved yet.",
+      "open": "Open “{name}”",
+      "del": "Delete “{name}”",
+      "deleted": "Deleted “{name}”",
+      "undo": "Undo",
+      "untitled": "Untitled arms {n}",
+      "section": "Save and share"
+    },
+    "share": {
+      "button": "Copy share link",
+      "copied": "Link copied. Opening it shows the same arms with all the answers.",
+      "failed": "Could not copy automatically; copy it from here:"
+    },
+    "legend": {
+      "title": "What it stands for",
+      "what": "Element",
+      "cat": "Kind",
+      "means": "Stands for"
+    },
+    "cat": {
+      "life": {
+        "name": "Life",
+        "hint": "Your character's situation in the game. Liege, titles, claims, deeds and place in the family appear on the shield through the matching heraldic custom."
+      },
+      "choice": {
+        "name": "Choice",
+        "hint": "The family's symbols are up to you. Heraldry gives charges no fixed meaning; the bearer does."
+      },
+      "taste": {
+        "name": "Taste",
+        "hint": "Looks and the order of the layouts only; no heraldic meaning."
+      },
+      "auto": {
+        "name": "Auto",
+        "hint": "Picked by the site from the family name so that different games differ; decoration only."
+      }
+    },
+    "mini": "Back to the arms",
+    "free": "Ignore historical accuracy",
+    "freeHint": "Lifts the limits of period, rank and the rule of tincture: every realm in every year, any title, any colours. CK3's technical limits (small shields, no overlaps, four quarters at most) still apply.",
+    "nav": {
+      "home": "Home",
+      "west": "Western rulers",
+      "examples": "Examples",
+      "rules": "Rules and sources",
+      "license": "Copyright and license"
+    }
+  },
+  "q": {
+    "name": {
+      "title": "Family name",
+      "mech": "The name picks the default ordinaries and divisions, so different saves end up different"
+    },
+    "year": {
+      "title": "In which year does the story start?",
+      "mech": "The year decides which period's heraldry applies and what each realm's arms looked like then"
+    },
+    "liege": {
+      "title": "Who is your family's liege?",
+      "mech": "Arms of patronage: vassals often took their lord's colours or charges; in Italy, the lord's arms in chief",
+      "none": "Independent / not listed"
+    },
+    "rank": {
+      "title": "What is your rank now?",
+      "mech": "It decides how the arms are combined: a lord keeps the family arms first; kings and emperors usually put the realm first and the family arms on a small central shield. CK3 draws crowns and title frames outside the shield by rank, so they are not part of the arms.",
+      "opt": {
+        "none": "Landless / baron",
+        "count": "Count",
+        "duke": "Duke",
+        "king": "King",
+        "emperor": "Emperor"
+      }
+    },
+    "titles": {
+      "title": "Which titles do you hold now?",
+      "mech": "Arms of dominion: the arms of held titles are quartered into the shield. Only titles a {rank} can hold are listed (that tier or below); up to {n}, picked in order of importance — skip titles that are not listed.",
+      "full": "At most {n}",
+      "noneAtRank": "No titles a {rank} can hold are listed yet; skip this question."
+    },
+    "emblem": {
+      "title": "Your main charge?",
+      "mech": "Heraldry has no fixed symbolism — what a charge means is up to you",
+      "none": "None",
+      "liege": "The liege's own charge"
+    },
+    "origin": {
+      "title": "How did the family rise?",
+      "mech": "Allusive and canting arms: a charge that hints at the family's origin, land or name",
+      "none": "Hard to say"
+    },
+    "faith": {
+      "title": "A sign of faith?",
+      "mech": "Religious charges (optional)",
+      "none": "None"
+    },
+    "deed": {
+      "title": "Any notable deeds?",
+      "mech": "Augmentations: a ruler could grant his arms to a family that served him well; a pilgrimage was remembered with the badge pilgrims brought home. Holy places depend on the faith; only the three commonest in Latin Christendom are here.",
+      "opt": {
+        "none": "Nothing special",
+        "crusade": "Went on crusade",
+        "pilgrimage_santiago": "Pilgrimage: Santiago (scallop)",
+        "service": "Great service to the liege",
+        "pilgrimage_rome": "Pilgrimage: Rome (crossed keys)",
+        "pilgrimage_jerusalem": "Pilgrimage: Jerusalem (Jerusalem cross)"
+      }
+    },
+    "claim": {
+      "title": "Which kingdom do you claim?",
+      "mech": "Arms of pretension: the claimed arms quartered, or on a small escutcheon",
+      "none": "No claim"
+    },
+    "cadency": {
+      "title": "Your place in the family?",
+      "mech": "Cadency: English heraldry marks each son's line with a small charge",
+      "opt": {
+        "none": "Head of the house",
+        "label": "Eldest son / cadet line (label)",
+        "crescent": "Second son's line (crescent)",
+        "mullet": "Third son's line (mullet)",
+        "martlet": "Fourth son's line (martlet)",
+        "annulet": "Fifth son's line (annulet)",
+        "baton": "Illegitimate line (baton sinister)"
+      }
+    },
+    "style": {
+      "title": "Preferred style?",
+      "mech": "Pure taste, no heraldic meaning — it only changes the order of the layouts",
+      "opt": {
+        "auto": "Let the system decide",
+        "simple": "Simple",
+        "ordinary": "Ordinaries",
+        "divided": "Divided field",
+        "patterned": "Stripes and checks"
+      }
+    },
+    "palette": {
+      "title": "Colours",
+      "mech": "Left: field, right: charges. Heraldry's one hard rule: metal (gold, silver) must not touch metal, nor colour colour — so only legal pairs are listed",
+      "liege": "The liege's colours",
+      "illegal": "Pairs that break the rule of tincture"
+    },
+    "parts": {
+      "title": "Detail colours",
+      "mech": "Colour 1 is the charge's own tincture, set by the palette above; the others are chosen automatically to stand out from the field and the charge. Such details are exempt from the rule of tincture.",
+      "none": "The chosen charges have no other colours.",
+      "auto": "Auto",
+      "colour": "Colour {n}"
+    }
+  },
+  "fam": {
+    "eagle": "Eagles",
+    "lion": "Lions",
+    "monster": "Monsters",
+    "beast": "Beasts",
+    "bird": "Birds",
+    "sea": "Sea creatures",
+    "plant": "Plants",
+    "celestial": "Stars & moons",
+    "object": "Objects",
+    "geometric": "Geometric",
+    "cross": "Crosses",
+    "castle": "Castles & strongholds",
+    "port": "Ports & seafaring",
+    "forest": "Forests & hunting",
+    "war": "Knighthood & war",
+    "trade": "Towns & trade",
+    "farm": "Farming & horses",
+    "church": "Church & learning"
+  },
+  "region": {
+    "west": "Western Europe",
+    "iberia": "Iberia",
+    "italy": "Italy & the Church",
+    "central": "The Empire & central Europe",
+    "north": "Scandinavia",
+    "east": "The East"
+  },
+  "num": {
+    "1": "a",
+    "2": "two",
+    "3": "three",
+    "4": "four",
+    "5": "five",
+    "6": "six"
+  },
+  "tinct": {
+    "or": "gold",
+    "argent": "silver",
+    "gules": "red",
+    "azure": "blue",
+    "sable": "black",
+    "vert": "green",
+    "purpure": "purple",
+    "ermine": "ermine"
+  },
+  "tadj": {
+    "or": "gold",
+    "argent": "silver",
+    "gules": "red",
+    "azure": "blue",
+    "sable": "black",
+    "vert": "green",
+    "purpure": "purple",
+    "ermine": "ermine"
+  },
+  "charge": {
+    "eagle": {
+      "n": "eagle",
+      "p": "eagles"
+    },
+    "eagle_crowned": {
+      "n": "crowned eagle",
+      "p": "crowned eagles"
+    },
+    "double_eagle": {
+      "n": "double-headed eagle",
+      "p": "double-headed eagles"
+    },
+    "maiden_eagle": {
+      "n": "maiden-eagle",
+      "p": "maiden-eagles"
+    },
+    "falcon": {
+      "n": "falcon",
+      "p": "falcons"
+    },
+    "martlet": {
+      "n": "martlet",
+      "p": "martlets"
+    },
+    "swan": {
+      "n": "swan",
+      "p": "swans"
+    },
+    "lion_rampant": {
+      "n": "lion rampant",
+      "p": "lions rampant"
+    },
+    "lion_rampant_crowned": {
+      "n": "crowned lion rampant",
+      "p": "crowned lions rampant"
+    },
+    "lion_forked_crowned": {
+      "n": "double-tailed crowned lion",
+      "p": "double-tailed crowned lions"
+    },
+    "lion_axe": {
+      "n": "crowned lion holding an axe",
+      "p": "crowned lions holding axes"
+    },
+    "lion_sword": {
+      "n": "crowned lion holding a sword",
+      "p": "crowned lions holding swords"
+    },
+    "lion_sword_sabre": {
+      "n": "lion with sword and sabre",
+      "p": "lions with sword and sabre"
+    },
+    "lion_manuscript": {
+      "n": "manuscript crowned lion",
+      "p": "manuscript crowned lions"
+    },
+    "lion_passant_guardant": {
+      "n": "lion passant guardant",
+      "p": "lions passant guardant"
+    },
+    "lion_st_mark": {
+      "n": "winged lion of St Mark",
+      "p": "winged lions of St Mark"
+    },
+    "griffin": {
+      "n": "griffin",
+      "p": "griffins"
+    },
+    "dragon": {
+      "n": "dragon",
+      "p": "dragons"
+    },
+    "boar": {
+      "n": "boar",
+      "p": "boars"
+    },
+    "bear": {
+      "n": "bear",
+      "p": "bears"
+    },
+    "wolf": {
+      "n": "wolf",
+      "p": "wolves"
+    },
+    "stag": {
+      "n": "stag",
+      "p": "stags"
+    },
+    "horse": {
+      "n": "rearing horse",
+      "p": "rearing horses"
+    },
+    "bull": {
+      "n": "bull",
+      "p": "bulls"
+    },
+    "dolphin": {
+      "n": "dolphin",
+      "p": "dolphins"
+    },
+    "fish": {
+      "n": "fish",
+      "p": "fishes"
+    },
+    "fleur": {
+      "n": "fleur-de-lis",
+      "p": "fleurs-de-lis"
+    },
+    "sexfoil": {
+      "n": "six-petalled flower",
+      "p": "six-petalled flowers"
+    },
+    "tree": {
+      "n": "tree",
+      "p": "trees"
+    },
+    "castle": {
+      "n": "castle",
+      "p": "castles"
+    },
+    "tower": {
+      "n": "tower",
+      "p": "towers"
+    },
+    "lymphad": {
+      "n": "galley",
+      "p": "galleys"
+    },
+    "key": {
+      "n": "key",
+      "p": "keys"
+    },
+    "keys_crossed": {
+      "n": "pair of crossed keys",
+      "p": "pairs of crossed keys"
+    },
+    "sword": {
+      "n": "sword",
+      "p": "swords"
+    },
+    "swords_crossed": {
+      "n": "pair of crossed swords",
+      "p": "pairs of crossed swords"
+    },
+    "axe": {
+      "n": "battle-axe",
+      "p": "battle-axes"
+    },
+    "horseshoe": {
+      "n": "horseshoe",
+      "p": "horseshoes"
+    },
+    "anchor": {
+      "n": "anchor",
+      "p": "anchors"
+    },
+    "wheel": {
+      "n": "wheel",
+      "p": "wheels"
+    },
+    "bell": {
+      "n": "bell",
+      "p": "bells"
+    },
+    "chalice": {
+      "n": "chalice",
+      "p": "chalices"
+    },
+    "crown": {
+      "n": "crown",
+      "p": "crowns"
+    },
+    "hand": {
+      "n": "right hand",
+      "p": "right hands"
+    },
+    "heart": {
+      "n": "heart",
+      "p": "hearts"
+    },
+    "escallop": {
+      "n": "scallop shell",
+      "p": "scallop shells"
+    },
+    "sun": {
+      "n": "sun",
+      "p": "suns"
+    },
+    "mullet": {
+      "n": "five-pointed star",
+      "p": "five-pointed stars"
+    },
+    "mullet6": {
+      "n": "six-pointed star",
+      "p": "six-pointed stars"
+    },
+    "crescent": {
+      "n": "crescent",
+      "p": "crescents"
+    },
+    "roundel": {
+      "n": "roundel",
+      "p": "roundels"
+    },
+    "annulet": {
+      "n": "ring",
+      "p": "rings"
+    },
+    "lozenge": {
+      "n": "lozenge",
+      "p": "lozenges"
+    },
+    "mascle": {
+      "n": "mascle",
+      "p": "mascles"
+    },
+    "billet": {
+      "n": "billet",
+      "p": "billets"
+    },
+    "cross": {
+      "n": "cross",
+      "p": "crosses"
+    },
+    "cross_patty": {
+      "n": "cross patty",
+      "p": "crosses patty"
+    },
+    "cross_potent": {
+      "n": "cross potent",
+      "p": "crosses potent"
+    },
+    "cross_moline": {
+      "n": "cross moline",
+      "p": "crosses moline"
+    },
+    "cross_crosslet": {
+      "n": "cross crosslet",
+      "p": "crosses crosslet"
+    },
+    "cross_fleury": {
+      "n": "cross fleury",
+      "p": "crosses fleury"
+    },
+    "cross_maltese": {
+      "n": "Maltese cross",
+      "p": "Maltese crosses"
+    },
+    "cross_patriarchal": {
+      "n": "patriarchal cross",
+      "p": "patriarchal crosses"
+    },
+    "jerusalem": {
+      "n": "Jerusalem cross",
+      "p": "Jerusalem crosses"
+    },
+    "chi_rho": {
+      "n": "chi-rho (☧)",
+      "p": "chi-rhos"
+    },
+    "quinas": {
+      "n": "cross of five escutcheons",
+      "p": "crosses of five escutcheons"
+    }
+  },
+  "div": {
+    "per_pale": "divided vertically",
+    "per_fess": "divided horizontally",
+    "per_bend": "divided diagonally",
+    "per_bend_sinister": "divided along the other diagonal",
+    "per_saltire": "divided in an X",
+    "quarterly": "quartered",
+    "gyronny": "gyronny of eight",
+    "barry": "barry of six",
+    "barry8": "barry of eight",
+    "paly": "paly of six",
+    "bendy": "bendy",
+    "chequy": "chequered",
+    "lozengy": "lozengy",
+    "lozengy_bend": "lozengy in bend",
+    "barry10": "barry of ten",
+    "barry_indented": "barry indented"
+  },
+  "ord": {
+    "fess": "fess",
+    "pale": "pale",
+    "bend": "bend",
+    "bend_sinister": "bend sinister",
+    "chevron": "chevron",
+    "saltire": "saltire",
+    "cross": "cross",
+    "pile": "pile",
+    "orle": "orle",
+    "tressure": "double tressure",
+    "pallets": "pallets",
+    "bars": "two bars",
+    "chevronels": "three chevronels",
+    "pall": "pall"
+  },
+  "layout": {
+    "single": "{a} in the centre",
+    "between": "a {o} with {a} around it",
+    "on": "three {a} on a {o}",
+    "orle": "{a} within an orle",
+    "variedChief": "{d} field, {a} on a chief",
+    "variedEscutcheon": "{d} field, {a} on a central shield",
+    "highBase": "{a} above, {b} below",
+    "chief": "{a} in the centre, three {b} on a chief",
+    "canton": "{a} in the centre, {b} on a canton",
+    "onBetween": "three {b} on a {o}, {a} around it",
+    "pale": "divided: {a} left, {b} right",
+    "fessDiv": "divided: {a} above, {b} below",
+    "variedCanton": "{d} field, {a} on a shield, {b} on a canton",
+    "ordinary": "a {o}",
+    "division": "{d}",
+    "capo": "a chief of {r}",
+    "capoMain": "{a} below",
+    "threePale": "three {a} in pale",
+    "threeFess": "three {a} in fess",
+    "threeBend": "three {a} in bend",
+    "six": "six {a}, three, two and one"
+  },
+  "place": {
+    "augmentation": "a canton of augmentation of {r}",
+    "onOrdinary": "three {a} on the ordinary",
+    "chiefOf": "three {a} on a chief",
+    "breast": "{a} on the eagle's breast",
+    "chief": "{a} in the middle of the chief",
+    "canton": "{a} on a canton",
+    "ordinary": "{a} on the ordinary",
+    "claimBreast": "a shield of {r} on the eagle's breast",
+    "claimOverall": "a shield of {r} in the centre",
+    "claimQuarterly": "quartered with {r}",
+    "dominion": "arms of {r} (held)",
+    "surtout": "family arms en surtout",
+    "ownQuarter": "family arms after the realms",
+    "imperial": "family arms on the imperial eagle's breast",
+    "grant": "a new coat granted by {r}, family arms en surtout"
+  },
+  "drop": {
+    "charge": "{a}",
+    "augmentationNoLiege": "the canton of augmentation (choose a liege first)",
+    "augmentation": "the canton of augmentation",
+    "cadency": "the cadency mark (it would overlap the top)",
+    "title": "the arms of {r} (no quarter left)"
+  },
+  "rule": {
+    "tincture": "A {top} {what} on {under} breaks the rule of tincture (metal on metal or colour on colour).",
+    "what": {
+      "ordinary": "ordinary",
+      "chief": "chief",
+      "canton": "canton",
+      "brisure": "cadency mark"
+    }
+  },
+  "desc": {
+    "sep": ", ",
+    "sep2": "; ",
+    "end": ".",
+    "chargeN": "{num} {t} {name}",
+    "field": {
+      "plain": "{t} field",
+      "ermine": "ermine field",
+      "semy": "{t} field strewn with {c}",
+      "div": "{d}, {a} and {b}"
+    },
+    "ordinary": "a {t} {o}",
+    "pallets": "four {t} pallets",
+    "on": "on {ord}, {c}",
+    "between": "{ord} with {c} around it",
+    "within": "{c} within {ord}",
+    "spot": {
+      "center": "{c}",
+      "high": "{c} above",
+      "base": "{c} below",
+      "dexter": "{c} on the left",
+      "sinister": "{c} on the right",
+      "chief_half": "{c} in the upper half",
+      "base_half": "{c} in the lower half",
+      "dexter_chief": "{c} in the upper left corner"
+    },
+    "breast": ", with {c} on its breast",
+    "breastEsc": ", bearing on its breast a small shield{of}: {arms}",
+    "of": " ({r})",
+    "chief": "a {t} chief",
+    "chiefWith": "{chief} with {c}",
+    "chiefOf": "a chief of {r} ({arms})",
+    "chiefBetween": "{mid} between {side}",
+    "canton": "a {t} canton",
+    "cantonWith": "{canton} with {c}",
+    "cantonOf": "a canton of augmentation of {r} ({arms})",
+    "overall": "over everything, a small shield{of}: {arms}",
+    "quarterly": "Quartered. {parts}",
+    "quarter": "{n}{of}: {arms}",
+    "qnum": {
+      "1": "1st",
+      "2": "2nd",
+      "3": "3rd",
+      "4": "4th"
+    },
+    "qand": " and ",
+    "brisure": {
+      "label": "a {t} label (cadency mark)",
+      "mark": "{c} at the top (cadency mark)",
+      "baton": "a {t} baton sinister over everything (mark of illegitimacy)"
+    },
+    "attr": {
+      "crowned": "crowned {t}",
+      "crined": "with {t} hair",
+      "armed": "with {t} details",
+      "detail": "with {t} doors and windows",
+      "axe": "the axe-blade {t}",
+      "sword": "the sword {t}",
+      "swordSabre": "the sword and sabre {t}",
+      "book": "holding a {t} book",
+      "plates": "each with five {t} roundels",
+      "keys": "one {a}, one {b}",
+      "nimbed": "with {t} haloes"
+    },
+    "ofFamily": " (the family arms)",
+    "lined": "{o} {line}",
+    "chiefLined": "a {t} chief {line}",
+    "arr": {
+      "pale": ", one above another",
+      "fess": ", side by side",
+      "bend": ", along a diagonal"
+    },
+    "bars": "two {t} bars",
+    "chevronels": "three {t} chevronels"
+  },
+  "note": {
+    "preHeraldic": "Heraldry appears in western Europe only around the mid-12th century. A family before 1150 strictly had no arms; these are made \"as if\".",
+    "liegeColours": "Taking the colours of your liege, {r}, is a real practice (arms of patronage).",
+    "liegeCharge": "The main charge is borrowed from your liege, {r}: the {a}. Vassals borrowing their lord's charge, then changing colours or adding a difference, is typical of arms of patronage.",
+    "liegeNoCharge": "Your liege {r} has no main charge to borrow in this period.",
+    "pretension": "Putting a claimed realm's arms into your own is called arms of pretension — Edward III of England quartered France from 1340.",
+    "exempt": "The arms of {r} put a gold cross on silver, breaking the rule of tincture on purpose — heraldry's most famous exception.",
+    "capo": "A chief bearing the liege's arms is an Italian custom (capo): Ghibellines often bore the \"chief of the Empire\", Guelphs the chief of Anjou.",
+    "augmentation": "A ruler granting his arms, or part of them, to a deserving family — on a canton or a chief — is an augmentation of honour.",
+    "label": "The label is the most common cadency mark: in England the eldest son's while his father lives; on the Continent often a cadet line's, as Anjou's red label on France.",
+    "cadencyMarks": "Marking the second, third, fourth and fifth sons with a crescent, mullet, martlet and annulet is English, and only became systematic in the late 15th century.",
+    "baton": "The baton sinister later became the mark of English royal bastards. Medieval marks of illegitimacy varied; this is the best known. It lies over everything by design.",
+    "ermine": "Ermine is a fur: silver strewn with black ermine tails. The dukes of Brittany bore plain ermine.",
+    "crusade": "Crosses are often assumed to mean \"went on crusade\", but in real arms they frequently have nothing to do with it. Here we simply borrow the association.",
+    "pilgrimageSantiago": "The scallop shell was the badge of pilgrims to Santiago, worn on hats and cloaks; in arms it often recalls pilgrimage.",
+    "charge": {
+      "double_eagle": "In Byzantium the double-headed eagle was an imperial and dynastic emblem, not family arms, mainly under the Palaiologoi after 1261; the West adopted it for the Empire only in the 15th century.",
+      "maiden_eagle": "The maiden-eagle (Jungfrauenadler) is mostly German — best known from Nuremberg, whose seal goes back to the 1220s. CK3 has no maiden-eagle, so the game version is built from the vanilla eagle plus a face, hair and a small crown.",
+      "chi_rho": "The chi-rho is Constantine's early Christian sign; it is rare in medieval western family arms — a playful choice.",
+      "roundel": "English heraldry names roundels by colour — a gold one is a bezant, silver a plate, red a torteau… the blazon uses these names.",
+      "martlet": "The martlet, a swallow without feet (it was said never to land), is common in arms; England also uses it for the fourth son.",
+      "lion_st_mark": "The winged lion of St Mark is Venice's emblem and hints at ties to Venice.",
+      "jerusalem": "The Jerusalem cross — a cross potent with four small crosses — is the arms of the Kingdom of Jerusalem.",
+      "escallop": "In arms the scallop shell often recalls the pilgrimage to Santiago.",
+      "fleur": "The fleur-de-lis is closely tied to the French crown; near France it was often read as a royal link.",
+      "lion_axe": "A crowned lion holding an axe is the arms of Norway, from about 1280; the axe is that of Saint Olaf, Norway's patron saint, at his martyrdom. CK3's own axe lion has no crown, so a small vanilla crown is added here.",
+      "lion_forked_crowned": "The best-known crowned lion with a forked tail is that of Bohemia (silver on red, from the 13th century); Luxembourg also bears one, on blue and white bars.",
+      "lion_sword_sabre": "The lion brandishing a sword and trampling a sabre is the arms of Finland, first seen about 1580 (under John III of Sweden), after CK3's years.",
+      "lion_manuscript": "This lion is taken from the arms of the King of Bulgaria (\"le Rey de Bugrie\") in the Lord Marshal's Roll (about 1295; the Hatton–Dugdale facsimile of about 1640, Society of Antiquaries of London): the man's face, the lean body and the S-shaped tail, turned into blocks as painted, with the crown and the face traced by hand.",
+      "lion_sword": "Lions holding swords are common enough in medieval heraldry. CK3 has no such texture (the one named for it holds none), so this one is built from the vanilla crowned lion and the vanilla sword.",
+      "lion_passant_guardant": "The lion passant guardant (the French léopard) is best known from the royal arms of England: three gold lions on red from 1198. Normandy (two) and Aquitaine (one) bear it too.",
+      "eagle": "The single-headed eagle is the sign of the Holy Roman Empire (black on gold), borrowed by many of its lands and families; Brandenburg bears a red eagle on silver, Silesia a black eagle with a crescent on its breast.",
+      "eagle_crowned": "The best-known crowned eagles are those of Poland (silver on red, from 1295) and Tyrol (red on silver).",
+      "griffin": "The griffin is the arms of the dukes of Pomerania (red on silver, from the 13th century) and of many lands along the Baltic.",
+      "castle": "The castle is the canting arms of Castile (Castilla, castillo), from about 1170; after 1230 it is quartered with the lion of León.",
+      "chalice": "The chalice is the arms of the Kingdom of Galicia (gold on blue, from the mid-13th century), linked to the Holy Sacrament kept there.",
+      "crown": "Three gold crowns are the arms of Sweden, from the mid-14th century.",
+      "keys_crossed": "The crossed keys are Saint Peter's, the pope's power to bind and loose; the papal arms bear a gold and a silver key on red from about 1300.",
+      "dolphin": "The dolphin is the canting arms of the lords of the Dauphiné; when the Dauphiné passed to France in 1349, the French heir took the title Dauphin from it.",
+      "bear": "Bears appear in canting arms, most famously Bern (Bern, Bär \"bear\")."
+    },
+    "anachronism": "{r} had no settled arms yet in your year; its arms from {y} are used instead, which is an anachronism.",
+    "dominionLord": "Arms of dominion: a lord usually keeps the family arms in the 1st and 4th quarters and quarters the arms of held titles into the rest, most important first.",
+    "dominionSovereign": "A sovereign's arms stand for the realm: the realms come first, and the family arms often sit on a small central shield (en surtout) — the Spanish Bourbons put Anjou over Castile and León.",
+    "imperialBreast": "Holy Roman Emperors often put their family or hereditary arms on the imperial eagle's breast — the Habsburg emperors bore Austria and Burgundy there.",
+    "rankFrame": {
+      "count": "CK3 draws a count's crown and title frame around the shield by itself, so the arms need no crown.",
+      "duke": "CK3 draws a duke's crown and title frame around the shield by itself, so the arms need no crown.",
+      "king": "CK3 draws a king's crown and title frame around the shield by itself, so the arms need no crown.",
+      "emperor": "CK3 draws an emperor's crown and title frame around the shield by itself, so the arms need no crown."
+    },
+    "grant": "A reward could also be a whole new coat: the ruler built one from his own charge and granted it, with the family's old arms on a small shield in the centre. When Emperor Sigismund made the Gonzaga marquesses of Mantua in 1433, he gave them argent, a cross gules between four eagles sable.",
+    "pilgrimageRome": "Pilgrims to Rome brought home badges with St Peter's crossed keys (or the vernicle, Christ's face on Veronica's veil). Crossed keys in arms usually stand for the Church or St Peter; this borrows the association.",
+    "pilgrimageJerusalem": "Pilgrims to Jerusalem were called palmers for the palm fronds they carried home; knights dubbed at the Holy Sepulchre used the Jerusalem cross as their sign. This borrows the association.",
+    "pilgrimageFaith": "Holy places and pilgrims' badges depend on the faith: Orthodox pilgrims went to Jerusalem, Constantinople and Mount Athos; other faiths' holy places and emblem traditions are not covered yet.",
+    "free": "History and the rules are switched off: period, rank and the rule of tincture are not checked, so these arms may not be what the time would have produced."
+  },
+  "warn": {
+    "realmArms": "These are the arms of {r} (borne from {y}). If you are playing that very house or realm, they are its arms; otherwise two families in one land may not bear the same arms.",
+    "realmArmsUntil": "These are the arms {r} bore from {y} to {z}. If you are playing that very house or realm, they are its arms; otherwise two families in one land may not bear the same arms."
+  },
+  "realm": {
+    "_early": "{r} has no attested arms in this period.",
+    "france": {
+      "name": "France",
+      "ancient": "France c. 1211–1376: blue strewn with gold fleurs-de-lis (\"France ancient\").",
+      "modern": "From c. 1376 Charles V reduced the fleurs to three (\"France modern\")."
+    },
+    "england": {
+      "name": "England",
+      "lions": "England from 1198: three gold lions passant guardant on red.",
+      "france_ancient": "From 1340 Edward III, claiming the French throne, quartered France with England.",
+      "france_modern": "From 1406 quartered with France modern (three fleurs)."
+    },
+    "scotland": {
+      "name": "Scotland",
+      "lion": "Scotland from about the 1220s: a red lion rampant on gold within a red double tressure."
+    },
+    "brittany": {
+      "name": "Brittany",
+      "ermine": "Brittany from 1316: plain ermine."
+    },
+    "flanders": {
+      "name": "Flanders",
+      "lion": "Flanders from about the 1160s: a black lion rampant on gold."
+    },
+    "holland": {
+      "name": "Holland",
+      "lion": "Holland from about 1198: a red lion rampant on gold."
+    },
+    "castile": {
+      "name": "Castile",
+      "castle": "Castile c. 1170–1230: a gold castle on red, doors and windows blue.",
+      "leon": "From 1230 Castile and León were united and their arms quartered."
+    },
+    "leon": {
+      "name": "León",
+      "lion": "León from the mid-12th century: a purple lion rampant on silver."
+    },
+    "aragon": {
+      "name": "Aragon",
+      "pallets": "Aragon from the mid-12th century: four red pallets on gold."
+    },
+    "portugal": {
+      "name": "Portugal",
+      "quinas": "Portugal from about 1185 (in use under Sancho I): five blue escutcheons in a cross on silver, each with five silver roundels; the side escutcheons point to the centre until 1485. Early on the number of roundels varies.",
+      "bordure": "From 1248 Afonso III added a red bordure with gold castles (and from 1385 to 1485 the green cross of Aviz). This site has no bordures yet, so these years are not offered."
+    },
+    "sicily": {
+      "name": "Sicily",
+      "hauteville": "Before 1194 (the Norman Hautevilles) there is no reliable record of Sicilian arms.",
+      "hohenstaufen": "Sicily under the Hohenstaufen (1194–1266): a black eagle on silver.",
+      "anjou": "Sicily under Anjou (1266–1282): France ancient with a red label.",
+      "aragonese": "After 1282 Sicily bore Aragon's pallets and the Hohenstaufen eagle per saltire — not included yet."
+    },
+    "papacy": {
+      "name": "The Papacy",
+      "keys": "The Holy See from about the 14th century: crossed keys of gold and silver on red."
+    },
+    "venice": {
+      "name": "Venice",
+      "lion": "Venice from the 13th century: the gold winged lion of St Mark on blue, holding a silver book."
+    },
+    "genoa": {
+      "name": "Genoa",
+      "cross": "Genoa from the late 12th century: a red cross on silver (St George's cross)."
+    },
+    "jerusalem": {
+      "name": "Jerusalem",
+      "cross": "Jerusalem from the 13th century: a gold Jerusalem cross on silver."
+    },
+    "byzantium": {
+      "name": "Byzantium",
+      "comnenian": "Before 1261 Byzantium had no arms in the western sense.",
+      "palaiologan": "The Palaiologoi (after 1261) used the double-headed eagle as a dynastic emblem; gold on red is a common rendering, though not heraldry in the strict sense."
+    },
+    "hre": {
+      "name": "Holy Roman Empire",
+      "early": "Before about 1200 the imperial eagle was not yet fixed as black on gold.",
+      "eagle": "The Empire c. 1200–1433: a black single-headed eagle on gold, armed red. Before 1433 the emperor's eagle had one head; CK3 shows the double-headed eagle throughout, which is the game's simplification.",
+      "double": "From 1433, when Sigismund was crowned emperor, a black double-headed eagle on gold, with gold haloes and red beaks and claws."
+    },
+    "austria": {
+      "name": "Austria",
+      "fess": "Austria from 1230: a silver fess on red."
+    },
+    "bavaria": {
+      "name": "Bavaria",
+      "lozengy": "Bavaria from 1242 (Wittelsbach): lozengy in bend, silver and blue."
+    },
+    "bohemia": {
+      "name": "Bohemia",
+      "lion": "Bohemia from the mid-13th century: a silver double-tailed lion, crowned gold, on red."
+    },
+    "hungary": {
+      "name": "Hungary",
+      "barry": "Hungary from about 1202: barry of red and silver (the Árpád stripes)."
+    },
+    "poland": {
+      "name": "Poland",
+      "eagle": "Poland from 1295: a silver eagle crowned gold on red."
+    },
+    "denmark": {
+      "name": "Denmark",
+      "lions": "Denmark from the 1190s: three blue lions passant guardant on gold (the red hearts added later are left out)."
+    },
+    "norway": {
+      "name": "Norway",
+      "lion": "Norway from about 1280: a crowned gold lion holding a silver-bladed axe, on red."
+    },
+    "sweden": {
+      "name": "Sweden",
+      "crowns": "Sweden from the mid-14th century: three gold crowns on blue."
+    },
+    "serbia": {
+      "name": "Serbia",
+      "eagle": "The Nemanjić dynasty (from the 13th century) used a silver double-headed eagle on red as a dynastic emblem."
+    },
+    "bulgaria": {
+      "name": "Bulgaria",
+      "marshal": "The Lord Marshal's Roll (England, about 1294) gives \"le Rey de Bugrie\", the king of Bulgaria, a silver lion rampant crowned gold, on black. These are arms recorded by western heralds; the Bulgarians themselves did not bear western-style arms. The lion here is that painting, turned into blocks as drawn."
+    },
+    "normandy": {
+      "name": "Duchy of Normandy",
+      "leopards": "From about the 13th century Normandy is given gules, two lions passant guardant (leopards) Or, one above the other."
+    },
+    "aquitaine": {
+      "name": "Duchy of Aquitaine",
+      "leopard": "From the late 13th century the English kings, as dukes of Guyenne (Aquitaine), bore gules, a lion passant guardant Or."
+    },
+    "brabant": {
+      "name": "Duchy of Brabant",
+      "lion": "Brabant from about 1190: sable, a lion rampant Or."
+    },
+    "luxembourg": {
+      "name": "County of Luxembourg",
+      "lion": "Luxembourg from about 1240: barry of ten argent and azure, a lion rampant gules with a forked tail, crowned Or."
+    },
+    "galicia": {
+      "name": "Kingdom of Galicia",
+      "chalice": "Thirteenth-century rolls of arms give the King of Galicia azure, a covered cup Or."
+    },
+    "savoy": {
+      "name": "County of Savoy",
+      "cross": "Savoy from the mid-13th century: gules, a cross argent. Earlier counts used an eagle."
+    },
+    "montferrat": {
+      "name": "March of Montferrat",
+      "chief": "The Aleramici of Montferrat (from about the 13th century): argent, a chief gules."
+    },
+    "cyprus": {
+      "name": "Kingdom of Cyprus",
+      "lusignan": "The Lusignan kings of Cyprus (a kingdom from 1197): barry argent and azure, a lion rampant gules, crowned Or."
+    },
+    "palatinate": {
+      "name": "Palatinate of the Rhine",
+      "lion": "The Wittelsbach Palatinate from about 1229: sable, a lion rampant Or, crowned gules."
+    },
+    "tyrol": {
+      "name": "County of Tyrol",
+      "eagle": "Tyrol from about the mid-13th century: argent, an eagle gules, crowned Or."
+    },
+    "brandenburg": {
+      "name": "March of Brandenburg",
+      "eagle": "The Ascanian margraves of Brandenburg (from about 1170): argent, an eagle gules."
+    },
+    "silesia": {
+      "name": "Duchy of Silesia",
+      "eagle": "Silesia from about 1224: Or, an eagle sable with a crescent argent on its breast."
+    },
+    "pomerania": {
+      "name": "Duchy of Pomerania",
+      "griffin": "Pomerania from about 1214: argent, a griffin gules."
+    }
+  },
+  "lname": {
+    "single": "Single charge",
+    "three": "Three, two and one",
+    "between": "{o} between",
+    "on": "On a {o}",
+    "onBetween": "On a {o}, between",
+    "ordinary": "Plain {o}",
+    "orle": "Within an orle",
+    "high_base": "In chief and in base",
+    "chief": "On a chief",
+    "canton": "With a canton",
+    "pale": "Per pale",
+    "fess_div": "Per fess",
+    "division": "{d}",
+    "varied_chief": "{d} with a chief",
+    "varied_escutcheon": "{d} with an inescutcheon",
+    "varied_canton": "{d} with canton and inescutcheon",
+    "capo": "Capo (chief of the liege)",
+    "quarterly": "Quarterly",
+    "plusOverall": "with an escutcheon over all",
+    "plusBreast": "with a shield on the breast",
+    "surtout": "Dominions, family en surtout",
+    "imperial": "Imperial eagle, family on its breast",
+    "grant": "Grant of {r}",
+    "three_pale": "Three in pale",
+    "three_fess": "Three in fess",
+    "three_bend": "Three in bend",
+    "six": "Six, three, two and one"
+  },
+  "legend": {
+    "what": {
+      "charge": "{a}, {t}",
+      "colours": "{f} field, {c} charges",
+      "div": "{d}",
+      "ord": "{o}",
+      "chief": "chief",
+      "canton": "canton",
+      "capo": "the arms of {r} on the chief",
+      "augmentation": "the arms of {r} on the canton",
+      "grant": "the {o} and four {a}",
+      "realm": "the arms of {r}",
+      "ownEsc": "the small shield in the centre",
+      "imperial": "the imperial eagle",
+      "brisure": {
+        "label": "label, {t}",
+        "crescent": "crescent, {t}",
+        "mullet": "mullet, {t}",
+        "martlet": "martlet, {t}",
+        "annulet": "annulet, {t}",
+        "baton": "baton sinister, {t}"
+      },
+      "ownBreast": "the small shield on the eagle's breast"
+    },
+    "means": {
+      "emblem": "the family's main charge (your pick)",
+      "emblemLiege": "borrowed from the liege, {r}",
+      "origin": "how the family rose",
+      "faith": "faith",
+      "crusade": "went on crusade",
+      "pilgrimage_santiago": "pilgrimage to Santiago",
+      "service": "great service to the liege",
+      "colours": "the family's colours",
+      "coloursLiege": "the colours of the liege, {r}",
+      "geometry": "geometry, no meaning",
+      "capo": "allegiance to {r} (Italian chief of the liege)",
+      "augmentation": "service to {r}, rewarded with an augmentation",
+      "grant": "a new coat granted by {r}",
+      "dominion": "holds the title of {r}",
+      "claim": "claims {r}",
+      "ownEsc": "the family's own arms",
+      "ownEscGrant": "the family's former arms",
+      "imperial": "holds the imperial title of {r}",
+      "cadency": {
+        "label": "eldest son or a cadet line",
+        "crescent": "second son's line",
+        "mullet": "third son's line",
+        "martlet": "fourth son's line",
+        "annulet": "fifth son's line",
+        "baton": "illegitimate line"
+      },
+      "pilgrimage_rome": "pilgrimage to Rome",
+      "pilgrimage_jerusalem": "pilgrimage to Jerusalem"
+    }
+  },
+  "line": {
+    "engrailed": "engrailed",
+    "indented": "indented",
+    "dancetty": "dancetty",
+    "embattled": "embattled",
+    "nebuly": "nebuly"
+  }
+}

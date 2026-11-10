@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+*.local.png
+/out/
+__pycache__/
+.venv/
+*.log
+vite.config.ts.timestamp-*
+.DS_Store

@@ -1,0 +1,129 @@
+# Made by this project's generator (varied-barry#g).
+coa_rd_dynasty_generated_grant={
+pattern="pattern__solid_designer.dds"
+color1=white
+color2=white
+color3=white
+colored_emblem={
+color1=red
+texture="ce_ordinary_fess_5.dds"
+instance={
+depth=20.010000
+}
+}
+colored_emblem={
+color1=red
+texture="ce_ordinary_pale_5.dds"
+instance={
+depth=19.010000
+}
+}
+colored_emblem={
+color1=black
+color2=red
+color3=red
+texture="ce_eagle.dds"
+instance={
+position={ 0.200000 0.206853 }
+scale={ 0.318725 0.318725 }
+depth=18.010000
+}
+instance={
+position={ 0.800000 0.206853 }
+scale={ 0.318725 0.318725 }
+depth=17.010000
+}
+instance={
+position={ 0.240000 0.765996 }
+scale={ 0.278884 0.278884 }
+depth=16.010000
+}
+instance={
+position={ 0.760000 0.765996 }
+scale={ 0.278884 0.278884 }
+depth=15.010000
+}
+}
+colored_emblem={
+color1=black
+texture="ce_escutcheon.dds"
+instance={
+position={ 0.500000 0.560000 }
+scale={ 0.596393 0.590820 }
+depth=14.010000
+}
+instance={
+position={ 0.500000 0.560000 }
+scale={ 0.557377 0.557377 }
+depth=13.010000
+}
+}
+colored_emblem={
+color1=yellow
+texture="ce_block_02.dds"
+instance={
+position={ 0.500000 0.459951 }
+scale={ 0.340000 0.066699 }
+depth=12.010000
+}
+instance={
+position={ 0.500000 0.570005 }
+scale={ 0.318240 0.020010 }
+depth=11.010000
+}
+instance={
+position={ 0.500000 0.590015 }
+scale={ 0.305320 0.020010 }
+depth=10.010000
+}
+instance={
+position={ 0.500000 0.610025 }
+scale={ 0.292060 0.020010 }
+depth=9.010000
+}
+instance={
+position={ 0.500000 0.623364 }
+scale={ 0.283333 0.006670 }
+depth=8.010000
+}
+instance={
+position={ 0.500000 0.694733 }
+scale={ 0.183509 0.002668 }
+depth=7.010000
+}
+instance={
+position={ 0.500000 0.702070 }
+scale={ 0.169728 0.012006 }
+depth=6.010000
+}
+instance={
+position={ 0.500000 0.714076 }
+scale={ 0.143616 0.012006 }
+depth=5.010000
+}
+instance={
+position={ 0.500000 0.724081 }
+scale={ 0.121856 0.008004 }
+depth=4.010000
+}
+instance={
+position={ 0.500000 0.732085 }
+scale={ 0.104448 0.008004 }
+depth=3.010000
+}
+instance={
+position={ 0.500000 0.740089 }
+scale={ 0.087040 0.008004 }
+depth=2.010000
+}
+instance={
+position={ 0.500000 0.748092 }
+scale={ 0.055760 0.008004 }
+depth=1.010000
+}
+instance={
+position={ 0.500000 0.756096 }
+scale={ 0.024480 0.008004 }
+}
+}
+}

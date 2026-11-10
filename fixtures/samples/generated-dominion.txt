@@ -1,0 +1,145 @@
+# Made by this project's generator (single#0).
+coa_rd_dynasty_generated_dominion={
+pattern="pattern__solid_designer.dds"
+color1=yellow
+color2=yellow
+color3=yellow
+colored_emblem={
+color1=black
+texture="ce_circle.dds"
+instance={
+position={ 0.162827 0.069400 }
+scale={ 0.083650 0.083650 }
+depth=19.010000
+}
+instance={
+position={ 0.217173 0.069400 }
+scale={ 0.083650 0.083650 }
+depth=17.010000
+}
+instance={
+position={ 0.704722 0.635592 }
+scale={ 0.056882 0.056882 }
+depth=7.010000
+}
+instance={
+position={ 0.741678 0.635592 }
+scale={ 0.056882 0.056882 }
+depth=5.010000
+}
+}
+colored_emblem={
+color1=yellow
+texture="ce_circle.dds"
+instance={
+position={ 0.162827 0.069400 }
+scale={ 0.078631 0.078631 }
+depth=18.010000
+}
+instance={
+position={ 0.217173 0.069400 }
+scale={ 0.078631 0.078631 }
+depth=16.010000
+}
+instance={
+position={ 0.704722 0.635592 }
+scale={ 0.053469 0.053469 }
+depth=6.010000
+}
+instance={
+position={ 0.741678 0.635592 }
+scale={ 0.053469 0.053469 }
+depth=4.010000
+}
+}
+colored_emblem={
+color1=black
+color2=red
+color3=red
+texture="ce_eagle_double.dds"
+instance={
+position={ 0.190309 0.176063 }
+scale={ 0.309049 0.309049 }
+depth=15.010000
+}
+instance={
+position={ 0.723410 0.708123 }
+scale={ 0.210153 0.210153 }
+depth=3.010000
+}
+}
+colored_emblem={
+color1=red
+texture="ce_block_02.dds"
+instance={
+position={ 0.750000 0.250000 }
+scale={ 0.500000 0.500000 }
+depth=14.010000
+}
+instance={
+position={ 0.250000 0.750000 }
+scale={ 0.500000 0.500000 }
+depth=9.010000
+}
+}
+colored_emblem={
+color1=white
+texture="ce_block_02.dds"
+instance={
+position={ 0.750000 0.093750 }
+scale={ 0.500000 0.062500 }
+depth=13.010000
+}
+instance={
+position={ 0.750000 0.218750 }
+scale={ 0.500000 0.062500 }
+depth=12.010000
+}
+instance={
+position={ 0.750000 0.343750 }
+scale={ 0.500000 0.062500 }
+depth=11.010000
+}
+instance={
+position={ 0.750000 0.468750 }
+scale={ 0.500000 0.062500 }
+depth=10.010000
+}
+}
+colored_emblem={
+color1=white
+color2=yellow
+color3=blue
+texture="ce_lion_rampant_crown_forked.dds"
+instance={
+position={ 0.278820 0.707502 }
+scale={ 0.212620 0.212620 }
+depth=8.010000
+}
+}
+colored_emblem={
+color1=black
+texture="ce_escutcheon.dds"
+instance={
+scale={ 0.596393 0.590820 }
+depth=2.010000
+}
+}
+colored_emblem={
+color1=red
+texture="ce_escutcheon.dds"
+instance={
+scale={ 0.557377 0.557377 }
+depth=1.010000
+}
+}
+colored_emblem={
+color1=white
+color2=blue
+texture="ce_lion_rampant.dds"
+instance={
+position={ 0.503336 0.486834 }
+scale={ 0.290047 0.290047 }
+}
+}
+}

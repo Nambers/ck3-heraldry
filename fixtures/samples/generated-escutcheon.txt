@@ -1,0 +1,129 @@
+# Made by this project's generator (single#0).
+coa_rd_dynasty_generated_escutcheon={
+pattern="pattern__solid_designer.dds"
+color1=white
+color2=white
+color3=white
+colored_emblem={
+color1=black
+color2=red
+color3=red
+texture="ce_eagle.dds"
+instance={
+position={ 0.500000 0.490558 }
+scale={ 0.956175 0.956175 }
+depth=20.010000
+}
+}
+colored_emblem={
+color1=black
+texture="ce_escutcheon.dds"
+instance={
+position={ 0.500000 0.419600 }
+scale={ 0.360402 0.357034 }
+depth=19.010000
+}
+}
+colored_emblem={
+color1=yellow
+texture="ce_escutcheon.dds"
+instance={
+position={ 0.500000 0.419600 }
+scale={ 0.336825 0.336825 }
+depth=18.010000
+}
+}
+colored_emblem={
+color1=red
+texture="ce_block_02.dds"
+instance={
+position={ 0.431375 0.383324 }
+scale={ 0.023423 0.169288 }
+depth=17.010000
+}
+instance={
+position={ 0.433327 0.474014 }
+scale={ 0.019519 0.012092 }
+depth=16.010000
+}
+instance={
+position={ 0.436235 0.483688 }
+scale={ 0.013704 0.007255 }
+depth=15.010000
+}
+instance={
+position={ 0.439378 0.490943 }
+scale={ 0.007417 0.007255 }
+depth=14.010000
+}
+instance={
+position={ 0.442573 0.498198 }
+scale={ 0.001027 0.007255 }
+depth=13.010000
+}
+instance={
+position={ 0.477091 0.409926 }
+scale={ 0.023217 0.222493 }
+depth=12.010000
+}
+instance={
+position={ 0.478570 0.523591 }
+scale={ 0.020259 0.004837 }
+depth=11.010000
+}
+instance={
+position={ 0.481200 0.528428 }
+scale={ 0.014999 0.004837 }
+depth=10.010000
+}
+instance={
+position={ 0.485926 0.533265 }
+scale={ 0.005547 0.004837 }
+depth=9.010000
+}
+instance={
+position={ 0.522909 0.409926 }
+scale={ 0.023217 0.222493 }
+depth=8.010000
+}
+instance={
+position={ 0.521430 0.523591 }
+scale={ 0.020259 0.004837 }
+depth=7.010000
+}
+instance={
+position={ 0.518800 0.528428 }
+scale={ 0.014999 0.004837 }
+depth=6.010000
+}
+instance={
+position={ 0.514074 0.533265 }
+scale={ 0.005547 0.004837 }
+depth=5.010000
+}
+instance={
+position={ 0.568625 0.383324 }
+scale={ 0.023423 0.169288 }
+depth=4.010000
+}
+instance={
+position={ 0.566673 0.474014 }
+scale={ 0.019519 0.012092 }
+depth=3.010000
+}
+instance={
+position={ 0.563765 0.483688 }
+scale={ 0.013704 0.007255 }
+depth=2.010000
+}
+instance={
+position={ 0.560622 0.490943 }
+scale={ 0.007417 0.007255 }
+depth=1.010000
+}
+instance={
+position={ 0.557427 0.498198 }
+scale={ 0.001027 0.007255 }
+}
+}
+}

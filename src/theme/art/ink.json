@@ -1,0 +1,24 @@
+{
+  "_about": "How each picture was turned into ink by tools/ink_picture.py (from its cropped source). Pictures not listed use the defaults.",
+  "default": {
+    "target": 0.16,
+    "paper-offset": 0.05,
+    "tone": 1,
+    "line": 0
+  },
+  "clergy-r.webp": {
+    "tone": 0.3,
+    "line": 1,
+    "why": "the blue sky behind the scribe's head would become a dark blot"
+  },
+  "merchant-l.webp": {
+    "tone": 0.3,
+    "line": 1,
+    "why": "the dark doorway behind the customer would become a black block"
+  },
+  "merchant-r.webp": {
+    "tone": 0.3,
+    "line": 1,
+    "why": "a dark wall behind the figures would take all the ink"
+  }
+}
