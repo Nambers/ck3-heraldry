@@ -4,7 +4,7 @@
 
 *Answer a few questions about your family's story and get a coat of arms that follows real heraldic rules, exported as code you can paste into the Crusader Kings III coat of arms designer. Vanilla textures only — no mod.*
 
-**在线使用：<https://nambers.github.io/ck3-heraldry/>**
+**在线使用：<https://ikuyo.dev/ck3-heraldry/>**
 
 界面支持中文和英文（右上角切换，或在网址后加 `?lang=en`）。
 
