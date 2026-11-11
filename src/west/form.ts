@@ -9,7 +9,7 @@ import { CHARGES } from "../charges.ts";
 import { TINCTURE, TINCTURES, type Tincture } from "../heraldry/tincture.ts";
 import { t } from "../i18n/index.ts";
 import { RANKS, canHold, realmAt } from "../realms.ts";
-import { ALL_PALETTES, DEFAULT_ANSWERS, MAX_TITLES, PALETTES, geomString, parseGeom, parseParts, partsString, type Answers } from "./answers.ts";
+import { ALL_PALETTES, DEFAULT_ANSWERS, MAX_TITLES, PALETTES, geomString, paletteOf, parseGeom, parseParts, partsString, thirdOf, type Answers } from "./answers.ts";
 import { CADENCY, DEEDS, EMBLEM_FAMILIES, FAITH_CHARGES, GEOM, GEOM_KEYS, ORIGIN_GROUPS, PARTS, PART_ROLE, SECTIONS, STYLES, YEAR_PRESETS, familyOf, realmOptions, titleOptions, type Family, type GeomKey, type Part } from "./questions.ts";
 
 /** the family last opened in a two-level picker: it stays open while it holds the answer (the bell is in two families) */
@@ -115,6 +115,21 @@ function palettePicker(a: Answers): string {
   return sw + `</div>`;
 }
 
+/** the third tincture: automatic, or any but the pair's own (shown, but off; see thirdOf) */
+function thirdRow(a: Answers): string {
+  const pair = paletteOf(a);
+  const x = thirdOf(a, pair);
+  const label = t("q.palette.third");
+  let s = `<div class="partrow third" role="group" aria-label="${esc(label)}"><span class="plabel">${esc(label)}</span><div class="pcs">`;
+  s += `<button type="button" class="pc auto${x ? "" : " on"}" data-set="third" data-value="" aria-pressed="${!x}">${esc(t("q.parts.auto"))}</button>`;
+  for (const c of TINCTURES) {
+    const off = !thirdOf({ ...a, third: c }, pair);
+    const name = esc(t(`tinct.${c}`));
+    s += `<button type="button" class="pc${x === c ? " on" : ""}" data-set="third" data-value="${c}" aria-pressed="${x === c}"${off ? " disabled" : ""} title="${name}" aria-label="${name}"><i style="background:${TINCTURE[c].svg}"></i></button>`;
+  }
+  return s + `</div></div><p class="mech">${esc(t("q.palette.thirdMech"))}</p>`;
+}
+
 /**
  * Detail colours, folded under the palette. They are numbered, not named: colour 1 is
  * the charge's own tincture (the palette), then one entry for each other colour the
@@ -185,7 +200,7 @@ function render(a: Answers): string {
   );
   q.style = fieldset(t("q.style.title"), t("q.style.mech"), `<div class="opts">${STYLES.map((s) => chip("style", s, t(`q.style.opt.${s}`), a.style === s)).join("")}</div>`);
   q.geom = fieldset(t("q.geom.title"), t("q.geom.mech"), geomPicker(a));
-  q.palette = fieldset(t("q.palette.title"), t("q.palette.mech"), palettePicker(a) + partsPanel(a));
+  q.palette = fieldset(t("q.palette.title"), t("q.palette.mech"), palettePicker(a) + thirdRow(a) + partsPanel(a));
   // questions grouped by kind: facts of the character's life, the family's own choices, looks
   return sections(SECTIONS.map((sec) => ({ cat: sec.cat, html: sec.questions.map((k) => q[k] ?? "") })));
 }

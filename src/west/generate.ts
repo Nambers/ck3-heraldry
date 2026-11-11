@@ -15,7 +15,7 @@ import { ON, escutcheonSafe } from "../layout.ts";
 import { REALMS, REALM_IDS, canHold, realmAt, realmMainCharge, realmPalette, type Period } from "../realms.ts";
 import type { Candidate as BaseCandidate, Msg, Note, Param, Result as BaseResult } from "../designer/types.ts";
 import { defaultCrown } from "../ck3/export.ts";
-import { parseGeom, parseParts, type Answers, type Geom, type Style } from "./answers.ts";
+import { paletteOf, parseGeom, parseParts, thirdOf, type Answers, type Geom, type Style } from "./answers.ts";
 import { GEOM, PARTS, PART_ROLE, type Part } from "./questions.ts";
 import { legend } from "./legend.ts";
 
@@ -78,8 +78,9 @@ function sameClass(like: Tincture, avoid: Tincture[]): Tincture {
   return order.find((t) => !avoid.includes(t)) ?? order[0];
 }
 
-/** a tincture contrasting `under`, preferring one not in `avoid` */
-function contrasting(under: Tincture | null, avoid: Tincture[]): Tincture {
+/** a tincture contrasting `under`: `prefer` if it does, else preferably one not in `avoid` */
+function contrasting(under: Tincture | null, avoid: Tincture[], prefer?: Tincture): Tincture {
+  if (prefer && (under === null || contrasts(prefer, under))) return prefer;
   const order: Tincture[] = ["argent", "or", "gules", "azure", "sable", "vert", "purpure"];
   return (
     order.find((t) => (under === null || contrasts(t, under)) && !avoid.includes(t) && t !== under) ??
@@ -115,12 +116,15 @@ const at = (spot: Placed["at"], charge: Charge): Placed => ({ at: spot, charge }
 
 // ---------------------------------------------------------------- templates
 
-function templates(Fp: Tincture, C: Tincture, A: Charge | undefined, B: Charge | undefined, seed: number, capo: { realm: string; arms: Arms } | null, geom: Geom): Base[] {
+function templates(Fp: Tincture, C: Tincture, third: Tincture | undefined, A: Charge | undefined, B: Charge | undefined, seed: number, capo: { realm: string; arms: Arms } | null, geom: Geom): Base[] {
   const out: Base[] = [];
   // ermine can only be a plain field in CK3; charges and stripes use argent instead
   const F: Tincture = Fp === "ermine" ? "argent" : Fp;
   const field = plain(Fp);
-  const T3 = sameClass(F, [F, C]);
+  // a third tincture (the player's, or another of the field's class), and what lies on it:
+  // whichever of the pair contrasts it, so the rule of tincture still holds
+  const T3 = third ?? sameClass(F, [F, C]);
+  const on3 = contrasts(C, T3) || !contrasts(F, T3) ? C : F;
   // the player's own geometry (Answers.geom) wins over the family name's; the i-th pick
   // after it follows the same rotation, so a second ordinary still differs from the first
   const rot = <T extends string>(list: readonly T[], chosen: string | undefined, i: number, byName: number): T => {
@@ -140,7 +144,8 @@ function templates(Fp: Tincture, C: Tincture, A: Charge | undefined, B: Charge |
   // vair names its metal first (and CK3's vair paints it as color1); fretty its field
   const furField: Field = fur === "vairy" ? { kind: "vairy", t: [metal, colour] } : { kind: "fretty", t: [F, C] };
   // on vair: another colour, metal charges on it; on fretty: the fret's tincture, charges in the field's
-  const furChief: [Tincture, Tincture] = fur === "vairy" ? [sameClass(colour, [F, C]), metal] : [C, F];
+  const vairT3 = third ?? sameClass(colour, [F, C]);
+  const furChief: [Tincture, Tincture] = fur === "vairy" ? [vairT3, contrasts(metal, vairT3) || !contrasts(colour, vairT3) ? metal : colour] : [C, F];
   // Semé, as the rolls use it for families: powdered in the tincture of what lies on it
   // (Gules crusilly, a lion rampant Or; Azure billetty Or, a bend Or; Sable bezanty)
   const semyId = geom.semy ?? SEMY_BY_NAME[(seed >>> 17) % SEMY_BY_NAME.length];
@@ -222,12 +227,12 @@ function templates(Fp: Tincture, C: Tincture, A: Charge | undefined, B: Charge |
     out.push({
       id: "varied-chief", style: "patterned", uses: which,
       label: [m("layout.variedChief", { d: { div: varied }, a: { charge: single.id } })],
-      arms: { field: { kind: varied, t: [F, C] }, chief: withLine({ t: T3, charges: small(single.id) ? [0, 1, 2].map(() => ch(single, C)) : [ch(single, C)] }, chiefLine), charges: [] },
+      arms: { field: { kind: varied, t: [F, C] }, chief: withLine({ t: T3, charges: small(single.id) ? [0, 1, 2].map(() => ch(single, on3)) : [ch(single, on3)] }, chiefLine), charges: [] },
     });
     out.push({
       id: "varied-escutcheon", style: "patterned", uses: which,
       label: [m("layout.variedEscutcheon", { d: { div: varied }, a: { charge: single.id } })],
-      arms: { field: { kind: varied, t: [F, C] }, charges: [], overall: { kind: "escutcheon", arms: { field: plain(T3), charges: [at("center", ch(single, C))] } } },
+      arms: { field: { kind: varied, t: [F, C] }, charges: [], overall: { kind: "escutcheon", arms: { field: plain(T3), charges: [at("center", ch(single, on3))] } } },
     });
     out.push({
       id: `fur-chief-${fur}`, style: "patterned", uses: which,
@@ -293,9 +298,9 @@ function templates(Fp: Tincture, C: Tincture, A: Charge | undefined, B: Charge |
       label: [m("layout.variedCanton", { d: { div: varied }, a: { charge: A.id }, b: { charge: B.id } })],
       arms: {
         field: { kind: varied, t: [F, C] },
-        canton: { t: T3, charge: ch(B, C) },
+        canton: { t: T3, charge: ch(B, on3) },
         charges: [],
-        overall: { kind: "escutcheon", arms: { field: plain(T3), charges: [at("center", ch(A, C))] } },
+        overall: { kind: "escutcheon", arms: { field: plain(T3), charges: [at("center", ch(A, on3))] } },
       },
     });
   }
@@ -473,17 +478,9 @@ export function generate(a: Answers): Result {
   const claimArms = claim && "arms" in claim ? claim.arms : null;
 
   // palette
-  let [F, C]: [Tincture, Tincture] = ["gules", "or"];
-  if (a.palette === "liege") {
-    if (liegeArms) {
-      [F, C] = realmPalette(liegeArms);
-      note("heraldry", "note.liegeColours", { r: { realm: a.liege } });
-      // Jerusalem's gold on silver is an exception the family may not copy
-      if (!contrasts(C, F)) C = isMetal(F) ? "gules" : "or";
-    }
-  } else {
-    [F, C] = a.palette.split("/") as [Tincture, Tincture];
-  }
+  let [F, C] = paletteOf(a);
+  if (a.palette === "liege" && liegeArms) note("heraldry", "note.liegeColours", { r: { realm: a.liege } });
+  const third = thirdOf(a, [F, C]);
 
   // for every charge made from here on: the tinctures in play, and the player's detail colours
   ctx = { avoid: [F === "ermine" ? "argent" : F, C], parts: parseParts(a.parts) };
@@ -595,7 +592,7 @@ export function generate(a: Answers): Result {
     const B = secondId ? mk(secondId, C) : undefined;
     const out: Candidate[] = [];
     const grants: { base: Base; v: Variant; weight: number }[] = [];
-    for (const base of templates(F, C, A, B, seed, capo, parseGeom(a.geom))) {
+    for (const base of templates(F, C, third, A, B, seed, capo, parseGeom(a.geom))) {
       const variants: Variant[] = [];
       const dropped: Msg[] = [];
       if (A && !base.uses.has("A")) dropped.push(m("drop.charge", { a: { charge: A.id } }));
@@ -682,7 +679,7 @@ export function generate(a: Answers): Result {
           continue;
         }
         const top = v.arms.quarterly ? null : v.arms.field.kind === "plain" ? v.arms.field.t : null;
-        v.arms.brisure = { kind: a.cadency, t: contrasting(top, [F, C]) };
+        v.arms.brisure = { kind: a.cadency, t: contrasting(top, [F, C], third) };
       }
       // a grant: the liege gives a new coat made from his own charge, the family arms en surtout
       if (grant) {
@@ -698,7 +695,7 @@ export function generate(a: Answers): Result {
         if (escutcheonSafe(fam) && !fam.chief?.of && !fam.canton?.of) {
           const v: Variant = { arms: { ...clone(grant), overall: { kind: "escutcheon", arms: fam, own: true } }, label: lbl, dropped: drp };
           if (a.cadency !== "none" && a.cadency !== "baton") v.dropped = [...v.dropped, m("drop.cadency", { b: a.cadency })];
-          else if (a.cadency === "baton") v.arms.brisure = { kind: "baton", t: contrasting(firstTincture(grant.field), [F, C]) };
+          else if (a.cadency === "baton") v.arms.brisure = { kind: "baton", t: contrasting(firstTincture(grant.field), [F, C], third) };
           grants.push({ base, v, weight: busy(fam) });
         }
       }
@@ -755,7 +752,7 @@ export function generate(a: Answers): Result {
     candidates[0];
   notesFor(a, notes, { liegeArms, claimArms, F, chosen });
   const rows = chosen
-    ? legend(a, chosen.arms, { main: mainId, mainFromLiege: a.emblem === "liege", second: secondId, secondIsDeed: !originId && !!deedCharge, tertiary, faith, F, C })
+    ? legend(a, chosen.arms, { main: mainId, mainFromLiege: a.emblem === "liege", second: secondId, secondIsDeed: !originId && !!deedCharge, tertiary, faith, F, C, third })
     : [];
   if (doms.length) {
     for (const d of doms) {

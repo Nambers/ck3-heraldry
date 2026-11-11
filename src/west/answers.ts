@@ -3,8 +3,8 @@
 
 import { CHARGES } from "../charges.ts";
 import type { Brisure } from "../heraldry/ast.ts";
-import { TINCTURES, isMetal, type Tincture } from "../heraldry/tincture.ts";
-import { RANKS, REALM_IDS, canHold, type Rank } from "../realms.ts";
+import { TINCTURES, contrasts, isMetal, type Tincture } from "../heraldry/tincture.ts";
+import { RANKS, REALM_IDS, canHold, realmAt, realmPalette, type Rank } from "../realms.ts";
 import { DEEDS, GEOM, GEOM_KEYS, PARTS, type GeomKey, type Part } from "./questions.ts";
 
 export type Deed = (typeof DEEDS)[number];
@@ -30,6 +30,11 @@ export interface Answers {
   style: Style;
   /** "liege" or "<field>/<charge>", e.g. "gules/or" */
   palette: string;
+  /**
+   * the tincture for where arms need a third one (a chief or canton on a striped field, an
+   * escutcheon, an ordinary on vair, the cadency mark); empty = automatic. See thirdOf.
+   */
+  third: string;
   /** no regard for history or the rule of tincture: every realm in every year, any title, any colours */
   free: boolean;
   /**
@@ -57,6 +62,7 @@ export const DEFAULT_ANSWERS: Answers = {
   cadency: "none",
   style: "auto",
   palette: "gules/or",
+  third: "",
   free: false,
   layout: "",
   parts: "",
@@ -82,8 +88,28 @@ export const ALL_PALETTES: [Tincture, Tincture][] = [
     .filter(([f, c]) => !PALETTES.some(([pf, pc]) => pf === f && pc === c)),
 ];
 
+/** the family's two tinctures: the chosen pair, or the liege's (made legal for the family) */
+export function paletteOf(a: Answers): [Tincture, Tincture] {
+  if (a.palette !== "liege") return a.palette.split("/") as [Tincture, Tincture];
+  const r = a.liege !== "none" ? realmAt(a.liege, a.year, a.free) : null;
+  if (!r || !("arms" in r)) return ["gules", "or"];
+  const [F, C] = realmPalette(r.arms);
+  // Jerusalem's gold on silver is an exception the family may not copy
+  return contrasts(C, F) ? [F, C] : [F, isMetal(F) ? "gules" : "or"];
+}
+
+/**
+ * The player's third tincture, if it can be one: it must differ from both of the pair
+ * (ermine counts as argent: stripes and charges use argent for it). Otherwise automatic,
+ * as a chosen layout is: the choice stays in the answers and comes back with a pair it suits.
+ */
+export function thirdOf(a: Answers, [F, C]: [Tincture, Tincture]): Tincture | undefined {
+  const x = a.third as Tincture;
+  return TINCTURES.includes(x) && x !== F && x !== C && !(F === "ermine" && x === "argent") ? x : undefined;
+}
+
 const KEYS: Record<keyof Answers, string> = {
-  name: "n", year: "y", liege: "l", origin: "o", emblem: "e", faith: "f", deed: "d", claim: "c", rank: "r", titles: "t", cadency: "b", style: "s", palette: "p", free: "x", layout: "k", parts: "h", geom: "g",
+  name: "n", year: "y", liege: "l", origin: "o", emblem: "e", faith: "f", deed: "d", claim: "c", rank: "r", titles: "t", cadency: "b", style: "s", palette: "p", third: "p3", free: "x", layout: "k", parts: "h", geom: "g",
 };
 
 export const MAX_TITLES = 3;
@@ -152,6 +178,7 @@ export function decodeAnswers(s: string): Answers {
     cadency: oneOf(q.get("b"), ["none", "label", "crescent", "mullet", "martlet", "annulet", "baton"], d.cadency),
     style: oneOf(q.get("s"), ["auto", "simple", "ordinary", "divided", "patterned"], d.style),
     palette: palette === "liege" || (free ? ALL_PALETTES : PALETTES).some(([f, c]) => `${f}/${c}` === palette) ? (palette as string) : d.palette,
+    third: oneOf(q.get("p3"), TINCTURES, d.third),
     free,
     layout: /^[a-z0-9_-]{1,40}(#(\d{1,2}|g))?$/.test(layout) ? layout : d.layout,
     parts: partsString(parseParts(q.get("h") ?? "")),

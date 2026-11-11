@@ -202,7 +202,9 @@
       "title": "Colours",
       "mech": "Left: field, right: charges. Heraldry's one hard rule: metal (gold, silver) must not touch metal, nor colour colour — so only legal pairs are listed",
       "liege": "The liege's colours",
-      "illegal": "Pairs that break the rule of tincture"
+      "illegal": "Pairs that break the rule of tincture",
+      "third": "Third",
+      "thirdMech": "Where arms need one more tincture: a chief, canton or escutcheon on a striped field, a chief or ordinary on vair; the cadency mark takes it too where it can. Automatic by default. Whatever lies on it takes whichever of the pair contrasts with it, so the arms stay legal."
     },
     "parts": {
       "title": "Detail colours",
@@ -991,6 +993,7 @@
     "what": {
       "charge": "{a}, {t}",
       "colours": "{f} field, {c} charges",
+      "third": "{t} as the third tincture",
       "div": "{d}",
       "ord": "{o}",
       "chief": "chief",

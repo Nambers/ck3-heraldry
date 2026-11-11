@@ -8,8 +8,8 @@ import { blazon } from "../src/heraldry/blazon.ts";
 import { checkArms } from "../src/heraldry/rules.ts";
 import { lintArms } from "../src/lint.ts";
 import { LOCALES, setLocale } from "../src/i18n/index.ts";
-import { DEFAULT_ANSWERS, PALETTES, decodeAnswers, encodeAnswers, geomString, partsString, type Answers } from "../src/west/answers.ts";
-import { TINCTURES } from "../src/heraldry/tincture.ts";
+import { DEFAULT_ANSWERS, PALETTES, decodeAnswers, encodeAnswers, geomString, paletteOf, partsString, thirdOf, type Answers } from "../src/west/answers.ts";
+import { TINCTURES, contrasts } from "../src/heraldry/tincture.ts";
 import { generate, hash, type Result } from "../src/west/generate.ts";
 import { CADENCY, DEEDS, EMBLEM_FAMILIES, FAITH_CHARGES, GEOM, GEOM_KEYS, ORIGIN_GROUPS, PARTS, STYLES } from "../src/west/questions.ts";
 import { RANKS, REALM_IDS, canHold, type Rank } from "../src/realms.ts";
@@ -50,6 +50,8 @@ function* sample(n: number): Generator<Answers> {
       titles,
       // one in five picks its own detail colours
       parts: i % 5 ? "" : partsString(Object.fromEntries(PARTS.map((p, j) => [p, pickFrom(TINCTURES, i, 30 + j)]))),
+      // one in six picks a third tincture (some clash with the pair, and fall back to automatic)
+      third: i % 6 ? "" : pickFrom(TINCTURES, i, 60),
       // one in four chooses its own geometry, each part of it half the time
       geom: i % 4 ? "" : geomString(Object.fromEntries(GEOM_KEYS.flatMap((k, j) => (hash(`${i}:${40 + j}`) % 2 ? [[k, pickFrom(GEOM[k], i, 50 + j)]] : [])))),
     };
@@ -321,6 +323,42 @@ describe("generator", () => {
     const a = { ...DEFAULT_ANSWERS, geom: "ord:fess,fur:vairy,line:engrailed" };
     expect(decodeAnswers(encodeAnswers(a)).geom).toBe("ord:fess,fur:vairy,line:engrailed");
     expect(decodeAnswers("g=line:wavy,fur:ermine,ord:pall,colour:red,div:per_fess").geom).toBe("ord:pall,div:per_fess");
+  });
+
+  it("puts the player's third tincture where arms need one, and keeps them legal", () => {
+    for (const palette of PALETTES.map(([f, c]) => `${f}/${c}`)) {
+      for (const third of TINCTURES) {
+        const a: Answers = { ...DEFAULT_ANSWERS, emblem: "lion_rampant", origin: "none", palette, third, geom: "var:barry,fur:vairy" };
+        const x = thirdOf(a, paletteOf(a));
+        const r = generate(a);
+        for (const c of r.candidates) expect(checkArms(c.arms), `${c.id} ${palette} ${third}`).toEqual([]);
+        if (!x) {
+          // one of the pair: automatic, exactly as with no choice
+          expect(third === paletteOf(a)[1] || [paletteOf(a)[0], "argent"].includes(third), `${palette} ${third}`).toBe(true);
+          expect(JSON.stringify(r.candidates)).toBe(JSON.stringify(generate({ ...a, third: "" }).candidates));
+          continue;
+        }
+        const get = (id: string) => r.candidates.find((c) => c.id === id)!.arms;
+        expect(get("varied-chief#0").chief!.t, `${palette} ${third}`).toBe(x);
+        expect(get("varied-escutcheon#0").overall!.arms.field, `${palette} ${third}`).toEqual({ kind: "plain", t: x });
+        expect(get("fur-chief-vairy#0").chief!.t, `${palette} ${third}`).toBe(x);
+      }
+    }
+    // what lies on it changes to whichever of the pair contrasts it
+    const r = generate({ ...DEFAULT_ANSWERS, emblem: "lion_rampant", origin: "none", palette: "argent/gules", third: "azure", geom: "var:barry,line:plain", layout: "varied-chief#0" });
+    expect(blazon(r.chosen.arms)).toBe("Barry of six argent and gules; on a chief azure a lion rampant argent");
+    expect(r.legend.find((row) => row.what.key === "legend.what.third")).toMatchObject({ cat: "taste", what: { p: { t: { t: "azure" } } } });
+    // the cadency mark takes it where it contrasts the field
+    const mark = (palette: string) => generate({ ...DEFAULT_ANSWERS, emblem: "lion_rampant", origin: "none", palette, third: "azure", cadency: "label", layout: "single#0" }).chosen.arms.brisure!.t;
+    expect(mark("argent/gules")).toBe("azure");
+    expect(contrasts(mark("gules/or"), "gules")).toBe(true);
+  });
+
+  it("keeps the third tincture in the link, and drops what it does not know", () => {
+    expect(decodeAnswers(encodeAnswers({ ...DEFAULT_ANSWERS, third: "vert" })).third).toBe("vert");
+    expect(encodeAnswers(DEFAULT_ANSWERS)).not.toContain("p3");
+    expect(decodeAnswers("p3=ermine").third).toBe("");
+    expect(decodeAnswers("p3=green").third).toBe("");
   });
 
   it("never lets a cadency mark overlap the top of the shield", { timeout: 60_000 }, () => {

@@ -3,7 +3,7 @@
 // it only lists what is actually on the shield.
 
 import type { Arms, Charge, ChargeId } from "../heraldry/ast.ts";
-import { isEscutcheon } from "../heraldry/ast.ts";
+import { firstTincture, isEscutcheon } from "../heraldry/ast.ts";
 import type { Tincture } from "../heraldry/tincture.ts";
 import { parseGeom, type Answers } from "./answers.ts";
 import type { Cat, LegendRow, Msg, Param } from "../designer/types.ts";
@@ -24,6 +24,8 @@ export interface Sources {
   faith?: ChargeId;
   F: Tincture;
   C: Tincture;
+  /** the player's third tincture, when it applies (see thirdOf) */
+  third?: Tincture;
 }
 
 const m = (key: string, p?: Record<string, Param>): Msg => ({ key, p });
@@ -127,6 +129,12 @@ export function legend(a: Answers, arms: Arms, s: Sources): LegendRow[] {
       m("legend.what.colours", { f: { t: s.F }, c: { t: s.C } }),
       liegeColours ? m("legend.means.coloursLiege", { r: { realm: a.liege } }) : m("legend.means.colours"),
     );
+    // the player's third tincture, where it is a field of its own (the cadency mark says its colour itself)
+    const x = s.third;
+    const esc = (f: Arms) => (f.overall && !f.overall.own && !f.overall.of ? f.overall.arms.field : null);
+    const bears = (f: Arms) =>
+      (!f.chief?.of && f.chief?.t === x) || (!f.canton?.of && f.canton?.t === x) || f.ordinary?.t === x || (esc(f)?.kind === "plain" && firstTincture(esc(f)!) === x);
+    if (x && fams.some(bears)) add("taste", m("legend.what.third", { t: { t: x } }), m("legend.means.colours"));
   }
 
   // the cadency mark, wherever it sits

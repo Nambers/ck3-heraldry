@@ -358,6 +358,13 @@ input[type="number"] {
 .pc.on {
   border-color: var(--accent);
 }
+.pc:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.partrow.third {
+  margin-top: 10px;
+}
 .pc:focus-visible,
 .partstoggle:focus-visible {
   outline: 2px solid var(--accent);
