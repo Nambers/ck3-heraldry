@@ -2,9 +2,10 @@
 // so the same answers always give the same arms and can live in the URL.
 
 import { CHARGES } from "../charges.ts";
+import { opens, type Era } from "../heraldry/era.ts";
 import type { Brisure } from "../heraldry/ast.ts";
 import { TINCTURES, contrasts, isMetal, type Tincture } from "../heraldry/tincture.ts";
-import { RANKS, REALM_IDS, canHold, realmAt, realmPalette, type Rank } from "../realms.ts";
+import { RANKS, REALM_IDS, holdable, realmAt, realmPalette, type Rank } from "../realms.ts";
 import { DEEDS, GEOM, GEOM_KEYS, PARTS, type GeomKey, type Part } from "./questions.ts";
 
 export type Deed = (typeof DEEDS)[number];
@@ -24,7 +25,7 @@ export interface Answers {
   claim: string; // "none" or a realm id
   /** the bearer's current rank; it limits which titles can be held (see canHold) */
   rank: Rank;
-  /** realms whose titles the bearer holds now, at most MAX_TITLES, in order of importance */
+  /** realms whose titles the bearer holds now, at most maxTitles(), in order of importance */
   titles: string[];
   cadency: "none" | Brisure;
   style: Style;
@@ -35,7 +36,11 @@ export interface Answers {
    * escutcheon, an ordinary on vair, the cadency mark); empty = automatic. See thirdOf.
    */
   third: string;
-  /** no regard for history or the rule of tincture: every realm in every year, any title, any colours */
+  /**
+   * no regard for the period: every realm's arms in every year, without remark, and the later
+   * practices in any year (src/heraldry/era.ts). Titles above the rank and colours against the
+   * rule of tincture need no switch: the player picks them from where they are folded away.
+   */
   free: boolean;
   /**
    * the chosen layout, by its id (e.g. "chief#0"), not by position: it stays
@@ -80,7 +85,7 @@ export const PALETTES: [Tincture, Tincture][] = [
   ["ermine", "sable"],
 ];
 
-/** with the rules switched off: any two different tinctures, the legal ones first */
+/** every pair of two different tinctures, the legal ones first: the rest are folded away in the form */
 export const ALL_PALETTES: [Tincture, Tincture][] = [
   ...PALETTES,
   ...[...TINCTURES, "ermine" as Tincture]
@@ -112,7 +117,11 @@ const KEYS: Record<keyof Answers, string> = {
   name: "n", year: "y", liege: "l", origin: "o", emblem: "e", faith: "f", deed: "d", claim: "c", rank: "r", titles: "t", cadency: "b", style: "s", palette: "p", third: "p3", free: "x", layout: "k", parts: "h", geom: "g",
 };
 
-export const MAX_TITLES = 3;
+/** quarters a marshalled coat may have in this year: four, six from 1435, eight only with history set aside */
+export const maxQuarters = (e: Era): 4 | 6 | 8 => (opens("quarterlyOfEight", e) ? 8 : opens("quarterlyOfSix", e) ? 6 : 4);
+
+/** titles held: as many as fit beside the family arms */
+export const maxTitles = (e: Era): number => maxQuarters(e) - 1;
 
 /** "crined:argent,armed:azure" -> { crined: "argent", armed: "azure" }; anything unknown is dropped */
 export function parseParts(s: string): Partial<Record<Part, Tincture>> {
@@ -164,9 +173,10 @@ export function decodeAnswers(s: string): Answers {
   const palette = q.get("p");
   const rank = oneOf<Rank>(q.get("r"), RANKS, d.rank);
   const free = q.get("x") === "true";
+  const y = q.has("y") && Number.isFinite(year) && year >= 867 && year <= 1453 ? Math.round(year) : d.year;
   return {
     name: (q.get("n") ?? d.name).slice(0, 60),
-    year: q.has("y") && Number.isFinite(year) && year >= 867 && year <= 1453 ? Math.round(year) : d.year,
+    year: y,
     liege: oneOf(q.get("l"), realms, d.liege),
     origin: oneOf(q.get("o"), charges, d.origin),
     emblem: oneOf(q.get("e"), [...charges, "liege"], d.emblem),
@@ -174,10 +184,10 @@ export function decodeAnswers(s: string): Answers {
     deed: oneOf(q.get("d"), DEEDS, d.deed),
     claim: oneOf(q.get("c"), realms, d.claim),
     rank,
-    titles: [...new Set((q.get("t") ?? "").split(","))].filter((id) => canHold(rank, id, free)).slice(0, MAX_TITLES),
+    titles: [...new Set((q.get("t") ?? "").split(","))].filter(holdable).slice(0, maxTitles({ year: y, free })),
     cadency: oneOf(q.get("b"), ["none", "label", "crescent", "mullet", "martlet", "annulet", "baton"], d.cadency),
     style: oneOf(q.get("s"), ["auto", "simple", "ordinary", "divided", "patterned"], d.style),
-    palette: palette === "liege" || (free ? ALL_PALETTES : PALETTES).some(([f, c]) => `${f}/${c}` === palette) ? (palette as string) : d.palette,
+    palette: palette === "liege" || ALL_PALETTES.some(([f, c]) => `${f}/${c}` === palette) ? (palette as string) : d.palette,
     third: oneOf(q.get("p3"), TINCTURES, d.third),
     free,
     layout: /^[a-z0-9_-]{1,40}(#(\d{1,2}|g))?$/.test(layout) ? layout : d.layout,

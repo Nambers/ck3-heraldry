@@ -18,6 +18,7 @@ import cross_fleury from "./cross_fleury.ts";
 import cross_maltese from "./cross_maltese.ts";
 import cross_moline from "./cross_moline.ts";
 import cross_patriarchal from "./cross_patriarchal.ts";
+import cross_patriarchal_mount from "./cross_patriarchal_mount.ts";
 import cross_patty from "./cross_patty.ts";
 import cross_potent from "./cross_potent.ts";
 import crown from "./crown.ts";
@@ -67,4 +68,4 @@ import tree from "./tree.ts";
 import wheel from "./wheel.ts";
 import wolf from "./wolf.ts";
 
-export const ART: Record<string, Art> = { anchor, annulet, axe, bear, bell, billet, boar, bull, castle, chalice, chi_rho, crescent, cross, cross_crosslet, cross_fleury, cross_maltese, cross_moline, cross_patriarchal, cross_patty, cross_potent, crown, dolphin, double_eagle, dragon, eagle, eagle_crowned, escallop, falcon, fish, fleur, griffin, hand, heart, horse, horseshoe, jerusalem, key, keys_crossed, lion_axe, lion_forked_crowned, lion_manuscript, lion_passant_guardant, lion_rampant, lion_rampant_crowned, lion_st_mark, lion_sword, lion_sword_sabre, lozenge, lymphad, maiden_eagle, martlet, mascle, mullet, mullet6, quinas, roundel, sexfoil, stag, sun, swan, sword, swords_crossed, tower, tree, wheel, wolf };
+export const ART: Record<string, Art> = { anchor, annulet, axe, bear, bell, billet, boar, bull, castle, chalice, chi_rho, crescent, cross, cross_crosslet, cross_fleury, cross_maltese, cross_moline, cross_patriarchal, cross_patriarchal_mount, cross_patty, cross_potent, crown, dolphin, double_eagle, dragon, eagle, eagle_crowned, escallop, falcon, fish, fleur, griffin, hand, heart, horse, horseshoe, jerusalem, key, keys_crossed, lion_axe, lion_forked_crowned, lion_manuscript, lion_passant_guardant, lion_rampant, lion_rampant_crowned, lion_st_mark, lion_sword, lion_sword_sabre, lozenge, lymphad, maiden_eagle, martlet, mascle, mullet, mullet6, quinas, roundel, sexfoil, stag, sun, swan, sword, swords_crossed, tower, tree, wheel, wolf };

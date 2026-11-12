@@ -10,7 +10,8 @@ import { LOCALES } from "../src/i18n/index.ts";
 import { EMBLEM_FAMILIES, FAITH_CHARGES, ORIGIN_GROUPS } from "../src/west/questions.ts";
 import { DESTINATIONS, REGIONS, ROLES } from "../src/pages/destinations.ts";
 import { CREDITS } from "../src/theme/art/credits.ts";
-import { REALM_SOURCES } from "../src/pages/sources.ts";
+import { LATE_SOURCES, REALM_SOURCES } from "../src/pages/sources.ts";
+import { LATE, type Late } from "../src/heraldry/era.ts";
 import { REALMS, REALM_IDS, TIER } from "../src/realms.ts";
 import { ROUTES } from "../src/routes.ts";
 
@@ -88,6 +89,13 @@ describe("charges", () => {
   it("offers only charges that exist", () => {
     const offered = [...EMBLEM_FAMILIES.flatMap((f) => f.charges), ...ORIGIN_GROUPS.flatMap((g) => g.charges), ...FAITH_CHARGES];
     expect(offered.filter((id) => !CHARGES[id]), "unknown charge id in src/west/questions.ts").toEqual([]);
+  });
+});
+
+describe("late practices", () => {
+  it("gives every late practice with a year a source to check it against", () => {
+    const dated = (Object.keys(LATE) as Late[]).filter((k) => LATE[k] !== null);
+    expect(dated.filter((k) => !LATE_SOURCES[k]), "add it to LATE_SOURCES in src/pages/sources.ts").toEqual([]);
   });
 });
 

@@ -19,6 +19,10 @@ function checkOn(issues: Issue[], top: Tincture, under: Tincture | null, what: I
 
 function checkCharge(issues: Issue[], c: Charge, under: Tincture | null) {
   checkOn(issues, c.t, under, { charge: c.id });
+  // the hills under Hungary's cross lie on the field too: only the player's own colour can break
+  // the rule there (the default follows the cross), so it is a warning, not a reason to drop the arms
+  if (c.id === "cross_patriarchal_mount" && c.second && under !== null && !contrasts(c.second, under))
+    issues.push({ level: "warn", key: "rule.tincture", p: { top: { t: c.second }, under: { t: under }, what: { charge: c.id } } });
   if (!c.breast) return;
   if (isEscutcheon(c.breast)) {
     if (!c.breast.of) issues.push(...checkArms(c.breast.arms));
@@ -69,6 +73,9 @@ export function checkArms(arms: Arms): Issue[] {
   if (arms.overall && !arms.overall.of) issues.push(...checkArms(arms.overall.arms));
   return issues;
 }
+
+/** the same arms without the marks that exempt historic realm arms from the checks */
+export const unmarked = (arms: Arms): Arms => JSON.parse(JSON.stringify(arms, (k, v) => (k === "exempt" || k === "of" ? undefined : v)));
 
 /** Quarters with identical arms grouped, in order of first appearance: [[1, 4], [2, 3]] etc. (1-based). */
 export function groupQuarters(arms: Arms): { n: number[]; arms: Arms; of?: RealmRef }[] {

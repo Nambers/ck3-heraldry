@@ -3,7 +3,7 @@
 import { CHARGES, TEX, type RecipePart, type Role } from "../charges.ts";
 import type { Arms, Charge } from "../heraldry/ast.ts";
 import { TINCTURE, type Tincture } from "../heraldry/tincture.ts";
-import { escutcheonEdge, layout, sub, type Box, type LNode } from "../layout.ts";
+import { BAND_ORDINARIES, escutcheonEdge, layout, sub, type Box, type LNode } from "../layout.ts";
 import type { Ck3Color, Coa, ColoredEmblem, Instance } from "./coa.ts";
 
 /** a tincture, or a blend of two (a share `k` of the second) written as rgb */
@@ -192,6 +192,20 @@ function shapePieces(n: Extract<LNode, { type: "shape" }>): Piece[] {
       return [over(TEX.bars, box, [t])];
     case "chevronels":
       return [over(TEX.chevronels, box, [t])];
+    case "bends2":
+    case "bends3":
+    case "bends4":
+    case "bends5":
+      return [over(TEX[n.kind], box, [t])];
+    case "chevrons2":
+      return [over(TEX.chevrons2, box, [t])];
+    case "fess_chevrons":
+      return [over(TEX.fessChevrons, box, [t])];
+    case "bars3":
+    case "gemel":
+    case "barrulets":
+    case "pales3":
+      return blockOrdinary(n)!;
     case "pall":
       return [over(TEX.pall, box, [t])];
     case "baton":
@@ -235,6 +249,8 @@ function blockOrdinary(n: Extract<LNode, { type: "shape" }>): Piece[] | null {
     const e = TEX.pallets4.edges;
     return [0, 2, 4, 6].map((i) => f(e[i], 0, e[i + 1], 1));
   }
+  const bands = BAND_ORDINARIES[n.kind as keyof typeof BAND_ORDINARIES];
+  if (bands) return bands.bands.map(([u, v]) => (bands.across ? f(0, u, 1, v) : f(u, 0, v, 1)));
   return null;
 }
 
@@ -315,9 +331,11 @@ export interface Ck3Export {
 /** The root field goes into the pattern when a vanilla pattern draws it exactly. */
 function rootPattern(arms: Arms): { pattern: string; colors: Tincture[]; skip: string[] } {
   const f = arms.quarterly ? arms.quarterly.q[0].field : arms.field;
-  const q4 = arms.quarterly?.q[3].field;
-  const sameQ4 = !!q4 && q4.kind === "plain" && f.kind === "plain" && q4.t === f.t;
-  const tag = arms.quarterly ? (sameQ4 ? ["q1", "q4"] : ["q1"]) : ["root"];
+  // the last quarter often repeats the first (1 and 4; 1 and 6 of six)
+  const n = arms.quarterly?.q.length ?? 0;
+  const last = arms.quarterly?.q[n - 1].field;
+  const sameLast = !!last && last.kind === "plain" && f.kind === "plain" && last.t === f.t;
+  const tag = arms.quarterly ? (sameLast ? ["q1", `q${n}`] : ["q1"]) : ["root"];
   if (f.kind === "plain" && f.t !== "ermine") return { pattern: TEX.patternSolid, colors: [f.t], skip: tag };
   if (f.kind === "semy") return { pattern: TEX.patternSolid, colors: [f.t], skip: tag };
   if (!arms.quarterly && f.kind !== "plain" && !f.line && TEX.patterns[f.kind]) return { pattern: TEX.patterns[f.kind], colors: [f.t[0], f.t[1]], skip: tag };

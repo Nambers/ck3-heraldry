@@ -98,6 +98,17 @@ export type OrdinaryKind =
   | "pallets" // four pallets (Aragon)
   | "bars" // two bars
   | "chevronels" // three chevronels (Clare)
+  // diminutives and multiples (docs/roll-gaps.md): alone on the field, never charged
+  | "bars3" // three bars
+  | "gemel" // two bars gemel (Tregoz)
+  | "barrulets" // six barrulets (Stuteville)
+  | "pales3" // three pallets
+  | "bends2" // two bends (Sulley)
+  | "bends3" // three bendlets
+  | "bends4" // four bendlets (Montfort)
+  | "bends5" // five bendlets (Talbot)
+  | "chevrons2" // two chevrons (Grendon)
+  | "fess_chevrons" // a fess between two chevrons (FitzWalter)
   | "pall"; // a Y from the upper corners to the base
 
 export interface Ordinary {
@@ -158,8 +169,13 @@ export interface Arms {
   granted?: RealmRef;
   /** these are a realm's historic arms (with something added over them): not ours to correct */
   of?: RealmRef;
-  /** quarterly: four coats, in order 1 (dexter chief) .. 4 (sinister base). Field and charges of the outer arms are ignored. */
-  quarterly?: { q: [Arms, Arms, Arms, Arms]; of?: (RealmRef | null)[] };
+  /**
+   * Coats marshalled on one shield: 2 side by side (impaled, dexter first), 4 two by two
+   * (quarterly), or 6 or 8 in two rows of 3 or 4; numbered along each row from dexter chief.
+   * Impaling, six and eight open by year (src/heraldry/era.ts). Field and charges of the
+   * outer arms are ignored.
+   */
+  quarterly?: { q: Arms[]; of?: (RealmRef | null)[] };
   /** historical arms that break a rule on purpose (Jerusalem's gold on silver) */
   exempt?: boolean;
 }
@@ -168,6 +184,13 @@ export const isEscutcheon = (x: Charge | Escutcheon | undefined): x is Escutcheo
   !!x && (x as Escutcheon).kind === "escutcheon";
 
 export const plain = (t: Tincture): Field => ({ kind: "plain", t });
+
+/** two coats on one shield are impaled (side by side), not quartered */
+export const isImpaled = (q: { q: Arms[] }): boolean => q.q.length === 2;
+/** rows of a marshalled coat: one when impaled, else two */
+export const quarterRows = (q: { q: Arms[] }): number => (isImpaled(q) ? 1 : 2);
+/** quarters in each row */
+export const quarterCols = (q: { q: Arms[] }): number => q.q.length / quarterRows(q);
 
 /** the tincture at the top-left of a field, used when one tincture is needed */
 export const firstTincture = (f: Field): Tincture => (f.kind === "plain" || f.kind === "semy" ? f.t : f.t[0]);

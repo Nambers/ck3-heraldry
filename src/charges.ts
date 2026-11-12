@@ -224,6 +224,13 @@ const LIST: ChargeDef[] = [
   C("cross_fleury", "cross", ["cross fleury", "crosses fleury"], [0.148, 0.148, 0.852, 0.852], one("ce_cross_fleury.dds"), { small: true }),
   C("cross_maltese", "cross", ["Maltese cross", "Maltese crosses"], [0.172, 0.172, 0.828, 0.828], one("ce_cross_maltese.dds"), { small: true }),
   C("cross_patriarchal", "cross", ["patriarchal cross", "patriarchal crosses"], [0.262, 0.18, 0.738, 0.82], one("ce_cross_patriarchal.dds"), { small: true }),
+  // Hungary's double cross on three hills, as vanilla draws k_hungary: the slender
+  // ce_cross_patriarchal_hungary standing in the middle hill of ce_mount (the hills in
+  // color "second", so the player may make them vert as Hungary's are)
+  C("cross_patriarchal_mount", "cross", ["patriarchal cross on a trimount", "patriarchal crosses on trimounts"], [0.243, 0.102, 0.757, 1.0], [
+    { texture: "ce_mount.dds", colors: ["second"], x: 0.5, y: 0.65, w: 0.7, h: 0.7 },
+    { texture: "ce_cross_patriarchal_hungary.dds", colors: ["body"], x: 0.5, y: 0.43, w: 0.8, h: 0.8 },
+  ], { attrs: ["second"] }),
   C("jerusalem", "cross", ["cross potent between four crosslets", "Jerusalem crosses"], [0.188, 0.188, 0.812, 0.812], one("ce_jerusalem.dds")),
   C("chi_rho", "cross", ["chi-rho", "chi-rhos"], [0.199, 0.137, 0.805, 0.867], one("ce_chi_rho.dds"), { small: true }),
 ];
@@ -274,6 +281,13 @@ export const TEX = {
   bars: "ce_ordinary_bars_2.dds", // y .2–.4 and .6–.8
   chevronels: "ce_ordinary_chevron_3.dds", // apexes at y .05/.375/.7, each .16 thick, slope ≈ 1
   pall: "ce_ordinary_pall_5.dds", // arms from the upper corners meet at (.5, .36–.64), then a pale x .4–.6
+  // bends and chevrons in numbers (the straight ones are blocks: BAND_ORDINARIES in layout.ts)
+  bends2: "ce_bends_02.dds", // two bends: x − y in −.39…−.078 and .218….532
+  bends3: "ce_bends_03.dds", // three bendlets, each .23 across in x − y
+  bends4: "ce_bends_04.dds", // four bendlets, .17
+  bends5: "ce_bends_05.dds", // five bendlets, .13
+  chevrons2: "ce_ordinary_chevron_2.dds", // apexes at y .129 and .453, each .16 thick, slope 1
+  fessChevrons: "ce_fess_betw_two_chevrons.dds", // fess y .383–.578; the upper chevron stops at it
   // lines of partition: "<ordinary or division>_<line>", same footprint as the straight one
   line: {
     cross_engrailed: "ce_cross_engrailed.dds",

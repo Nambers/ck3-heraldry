@@ -46,7 +46,7 @@ pnpm check    # 类型检查 + 全部测试，约半分钟
 | `src/charges.ts` | 图案库：纹章学定义和 CK3 配方；其他贴图在 `TEX` |
 | `src/art/` | 图案 SVG，一个图案一个文件，`_` 开头的是共用零件 |
 | `src/realms.ts` | 各王国按年代的纹章、头衔等级 |
-| `src/heraldry/` | 结构化 blazon、色彩规则、英文 blazon |
+| `src/heraldry/` | 结构化 blazon、色彩规则、英文 blazon、晚期做法的年代开关（`era.ts`） |
 | `src/layout.ts`、`src/lint.ts` | 排版（网页和 CK3 共用）、排版检查 |
 | `src/render/svg.ts` | 网页预览 |
 | `src/ck3/` | CK3 代码的解析、序列化、导出；DDS 解码和游戏贴图预览 |
@@ -134,6 +134,7 @@ pnpm check    # 类型检查 + 全部测试，约半分钟
 - `pnpm examples` 把一组固定的例子写到 `out/ex/`。装了游戏的话，用 `python3 tools/ck3_preview.py out/ex/*.txt -o out/preview.png` 渲染出来对照。
 - 生成器只输出 i18n 的 key 和参数，文字放在语言文件里。
 - 新的纹章机制要有历史依据：在 [design.md](docs/design.md) 里说明，并加一个示例。
+- 比其余做法晚出现的机制（如六区）按年代开放：在 `src/heraldry/era.ts` 的 `LATE` 里记最早有出处的年份，出处写进 `src/pages/sources.ts` 的 `LATE_SOURCES`，生成器里用 `opens()` 判断，见 [design.md](docs/design.md#晚期做法与年代开关)。
 - 如果改动让示例变了样，`test/examples.test.ts` 会失败。确认新结果正确后，再更新 `example-list.ts`。
 
 ## 测试

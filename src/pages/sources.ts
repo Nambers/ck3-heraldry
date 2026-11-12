@@ -1,3 +1,5 @@
+import type { Late } from "../heraldry/era.ts";
+
 // Where each realm's arms can be checked: an English Wikipedia article
 // (checked to exist; not every one is a "Coat of arms of ..." page).
 export const REALM_SOURCES: Record<string, string> = {
@@ -13,6 +15,15 @@ export const REALM_SOURCES: Record<string, string> = {
   palatinate: "Electoral_Palatinate", tyrol: "Coat_of_arms_of_Tyrol", brandenburg: "Coat_of_arms_of_Brandenburg",
   silesia: "Coat_of_arms_of_Silesia", pomerania: "Coat_of_arms_of_Pomerania",
   portugal: "Coat_of_arms_of_Portugal", bulgaria: "Coat_of_arms_of_Bulgaria",
+};
+
+/** where each late practice with a year (src/heraldry/era.ts) can be checked */
+export const LATE_SOURCES: Partial<Record<Late, string>> = {
+  // Gelre 646, 647 (f. 62r): the Aragonese counts of Urgell and Empúries, Aragon impaling their counties
+  impalement: "http://www.heraldique-europeenne.org/Armoriaux/Gelre/F62r.htm",
+  // René of Anjou's six quarters (Armorial de l'Europe et de la Toison d'or f. 100; his Hours, f. 4v, 1442–43),
+  // kept by Queens' College, Cambridge, from his daughter Margaret of Anjou
+  quarterlyOfSix: "https://history.queens.cam.ac.uk/college/heraldic-arms",
 };
 
 export const CAPO_SOURCE = "https://it.wikipedia.org/wiki/Capo_dell%27Impero";

@@ -209,7 +209,21 @@ const LIST: Realm[] = [
   },
   {
     id: "hungary", region: "central",
-    periods: [before(1202), { from: 1202, arms: { field: { kind: "barry8", t: ["gules", "argent"] }, charges: [] }, key: "barry" }],
+    // Coat_of_arms_of_Hungary: the double cross from Béla III (1172–1196, on his arms and coins;
+    // Laszlovszky 1989, Engel 2001), the Árpád stripes from Emeric's seal of 1202. The Angevins
+    // bore the stripes impaling the lilies of France, as the Gelre Armorial paints Louis I (Gelre
+    // 500, first quarter: barry of eight argent and gules; azure semé-de-lis Or). The stripes
+    // beside the double cross on its hills come later; not included until a cited date is found.
+    periods: [
+      before(1172),
+      { from: 1172, to: 1202, arms: one("gules", ch("cross_patriarchal", "argent")), key: "cross" },
+      { from: 1202, to: 1301, arms: { field: { kind: "barry8", t: ["gules", "argent"] }, charges: [] }, key: "barry" },
+      {
+        from: 1301, to: 1382, key: "anjou",
+        arms: { field: { kind: "barry8", t: ["argent", "gules"] }, charges: [], quarterly: { q: [{ field: { kind: "barry8", t: ["argent", "gules"] }, charges: [] }, FRANCE_ANCIENT] } },
+      },
+      { from: 1382, arms: { field: { kind: "barry8", t: ["gules", "argent"] }, charges: [] }, key: "barryLater" },
+    ],
   },
   {
     id: "poland", region: "central",
@@ -261,10 +275,12 @@ export const rankAtLeast = (a: Rank, b: Rank) => RANKS.indexOf(a) >= RANKS.index
  * In CK3 your rank is your highest title, so a bearer holds titles of their
  * own tier or below: a duke may hold counties, never a kingdom.
  */
-export const canHold = (rank: Rank, id: string, free = false): boolean => {
+export const canHold = (rank: Rank, id: string): boolean => {
   const t = realmTier(id);
-  return t !== null && (free || (rank !== "none" && rankAtLeast(rank, t)));
+  return t !== null && rank !== "none" && rankAtLeast(rank, t);
 };
+/** a title anyone could hold (not a republic or the Papacy): the player may pick one above their rank */
+export const holdable = (id: string): boolean => realmTier(id) !== null;
 export const REALM_IDS: string[] = LIST.map((r) => r.id);
 /**
  * The realm's arms in a given year. Before a realm had arms we still offer its

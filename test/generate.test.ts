@@ -8,13 +8,14 @@ import { blazon } from "../src/heraldry/blazon.ts";
 import { checkArms } from "../src/heraldry/rules.ts";
 import { lintArms } from "../src/lint.ts";
 import { LOCALES, setLocale } from "../src/i18n/index.ts";
-import { DEFAULT_ANSWERS, PALETTES, decodeAnswers, encodeAnswers, geomString, paletteOf, partsString, thirdOf, type Answers } from "../src/west/answers.ts";
+import { DEFAULT_ANSWERS, PALETTES, decodeAnswers, encodeAnswers, geomString, maxTitles, paletteOf, partsString, thirdOf, type Answers } from "../src/west/answers.ts";
+import { setAnswer } from "../src/west/form.ts";
 import { TINCTURES, contrasts } from "../src/heraldry/tincture.ts";
 import { generate, hash, type Result } from "../src/west/generate.ts";
 import { CADENCY, DEEDS, EMBLEM_FAMILIES, FAITH_CHARGES, GEOM, GEOM_KEYS, ORIGIN_GROUPS, PARTS, STYLES } from "../src/west/questions.ts";
-import { RANKS, REALM_IDS, canHold, type Rank } from "../src/realms.ts";
+import { RANKS, REALM_IDS, canHold, holdable, type Rank } from "../src/realms.ts";
 import { renderSvg } from "../src/render/svg.ts";
-import { escutcheonSafe } from "../src/layout.ts";
+import { escutcheonSafe, layout } from "../src/layout.ts";
 import type { Arms } from "../src/heraldry/ast.ts";
 import { gamePath, inGame } from "./ck3-game.ts";
 
@@ -146,6 +147,40 @@ describe("generator", () => {
     }
   });
 
+  it("sets the charges of a divided field evenly, on their own halves", { timeout: 60_000 }, () => {
+    let pairs = 0;
+    for (const { a, r } of every(2)) {
+      for (const c of r.candidates) {
+        const nodes = layout(c.arms);
+        for (const d of nodes) {
+          if (d.type !== "division" || (d.kind !== "per_pale" && d.kind !== "per_fess") || d.t[0] === d.t[1]) continue;
+          const inside = nodes.filter((n): n is Extract<typeof n, { type: "charge" }> => {
+            if (n.type !== "charge" || n.on !== "field") return false;
+            const [x, y] = [n.box.x + n.box.w / 2, n.box.y + n.box.h / 2];
+            return x > d.box.x && x < d.box.x + d.box.w && y > d.box.y && y < d.box.y + d.box.h;
+          });
+          const one = inside.filter((n) => n.under === d.t[0]), two = inside.filter((n) => n.under === d.t[1]);
+          if (one.length !== 1 || two.length !== 1) continue;
+          pairs++;
+          const at = `${c.id} ${JSON.stringify(a)}`;
+          const mid = (b: { x: number; y: number; w: number; h: number }) => [b.x + b.w / 2, b.y + b.h / 2];
+          const big = (b: { w: number; h: number }) => Math.max(b.w, b.h);
+          if (d.kind === "per_pale") {
+            // side by side: the same height and size, as far from the line
+            expect(Math.abs(mid(one[0].box)[1] - mid(two[0].box)[1]), at).toBeLessThan(1e-6);
+            expect(Math.abs(big(one[0].box) - big(two[0].box)), at).toBeLessThan(1e-6);
+            const line = d.box.x + d.box.w / 2;
+            expect(Math.abs(line - mid(one[0].box)[0] - (mid(two[0].box)[0] - line)), at).toBeLessThan(1e-6);
+          } else expect(Math.abs(mid(one[0].box)[0] - mid(two[0].box)[0]), at).toBeLessThan(1e-6);
+          // and never so small they cannot be made out: a fifth of the half they lie on, at least
+          const half = d.kind === "per_pale" ? d.box.w / 2 : d.box.h / 2;
+          for (const n of [one[0], two[0]]) expect(big(n.box), at).toBeGreaterThan(0.2 * half);
+        }
+      }
+    }
+    expect(pairs).toBeGreaterThan(200);
+  });
+
   it("renders SVG without holes", () => {
     for (const { r } of every(25)) for (const c of r.candidates) expect(renderSvg(c.arms)).not.toMatch(/undefined|NaN/);
   });
@@ -173,30 +208,38 @@ describe("generator", () => {
     expect(emperor.candidates.some((c) => c.arms.of?.id === "hre" && c.arms.charges.some((p) => p.charge.breast && "own" in p.charge.breast))).toBe(true);
   });
 
-  it("only lets a rank hold titles of its own tier or below", () => {
-    // a count cannot hold a kingdom; no rank holds nothing
-    expect(decodeAnswers("r=count&t=flanders,france").titles).toEqual(["flanders"]);
-    expect(decodeAnswers("t=flanders").titles).toEqual([]);
-    expect(decodeAnswers("r=king&t=brittany,france,flanders").titles).toEqual(["brittany", "france", "flanders"]);
-    // and the generator ignores titles above the rank even if handed them
+  it("bears titles above the rank when the player picks them, and says what CK3 would make of it", () => {
+    // offered folded away; picked, they stay in the link and in the arms
+    expect(decodeAnswers("r=count&t=flanders,france").titles).toEqual(["flanders", "france"]);
+    expect(decodeAnswers("t=flanders").titles).toEqual(["flanders"]);
+    // republics and the Papacy are held by no one
+    expect(decodeAnswers("r=king&t=venice,france").titles).toEqual(["france"]);
     const r = generate({ ...DEFAULT_ANSWERS, rank: "duke", titles: ["france"] });
-    expect(r.candidates.some((c) => c.arms.quarterly?.of?.some((x) => x?.id === "france"))).toBe(false);
+    expect(r.candidates.some((c) => c.arms.quarterly?.of?.some((x) => x?.id === "france"))).toBe(true);
+    expect(r.notes.map((n) => n.msg.key)).toContain("note.aboveRank");
+    expect(generate({ ...DEFAULT_ANSWERS, rank: "king", titles: ["france"] }).notes.map((n) => n.msg.key)).not.toContain("note.aboveRank");
   });
 
-  it("lifts period, rank and tincture limits when history is switched off", () => {
-    // colour on colour, a realm before its arms, a kingdom held without a rank
-    const a: Answers = { ...DEFAULT_ANSWERS, free: true, year: 900, palette: "gules/azure", liege: "hre", titles: ["france"], emblem: "lion_rampant", origin: "none" };
-    expect(decodeAnswers(encodeAnswers(a))).toEqual(a);
+  it("keeps arms against the rule of tincture when the player picks such a pair, without any switch", () => {
+    const a: Answers = { ...DEFAULT_ANSWERS, palette: "gules/azure", emblem: "lion_rampant", origin: "none" };
+    expect(decodeAnswers(encodeAnswers(a)).palette).toBe("gules/azure");
     const r = generate(a);
     expect(r.candidates.length).toBeGreaterThan(0);
     expect(r.candidates.some((c) => checkArms(c.arms).some((i) => i.level === "error"))).toBe(true);
-    expect(r.candidates.some((c) => c.arms.quarterly?.of?.some((x) => x?.id === "france"))).toBe(true);
+    expect(r.notes.map((n) => n.msg.key)).toContain("note.armesFausses");
+    expect(r.notes.map((n) => n.msg.key)).not.toContain("note.free");
+  });
+
+  it("lifts only the period when history is switched off", () => {
+    // a realm before its arms, a late practice in an early year
+    const a: Answers = { ...DEFAULT_ANSWERS, free: true, year: 900, liege: "hre", emblem: "lion_rampant", origin: "none" };
+    expect(decodeAnswers(encodeAnswers(a))).toEqual(a);
+    const r = generate(a);
+    expect(r.candidates.length).toBeGreaterThan(0);
     expect(r.notes.map((n) => n.msg.key)).not.toContain("note.anachronism");
     expect(r.notes.map((n) => n.msg.key)).toContain("note.free");
-    // with the rules on, the same link loses what they forbid
-    const strict = decodeAnswers(encodeAnswers({ ...a, free: false }));
-    expect(strict.palette).toBe(DEFAULT_ANSWERS.palette);
-    expect(strict.titles).toEqual([]);
+    expect(generate({ ...a, free: false }).notes.map((n) => n.msg.key)).not.toContain("note.free");
+    expect(maxTitles({ year: 900, free: true })).toBe(7);
   });
 
   it("only puts CK3-safe arms on escutcheons", { timeout: 60_000 }, () => {
@@ -256,6 +299,32 @@ describe("generator", () => {
       expect(r.chosen.warnings?.map((w) => w.key), `${year}`).toEqual(["warn.realmArms"]);
       expect(fmt(r.chosen.warnings![0])).toContain("1294");
     }
+  });
+
+  it("bears a faith symbol alone as the family's charge, never dropping it", () => {
+    for (const faith of FAITH_CHARGES) {
+      const r = generate({ ...DEFAULT_ANSWERS, emblem: "none", origin: "none", faith });
+      expect(r.candidates.length, faith).toBeGreaterThan(0);
+      for (const c of r.candidates) {
+        expect(c.dropped, `${faith} ${c.id}`).toEqual([]);
+        expect(JSON.stringify(c.arms), `${faith} ${c.id}`).toContain(`"id":"${faith}"`);
+      }
+    }
+  });
+
+  it("names arms that break the rule of tincture: armes fausses, or a realm's armes à enquérir", () => {
+    const keys = (q: string) => generate(decodeAnswers(q)).notes.map((n) => n.msg.key);
+    // Hungary's green hills on red, chosen as a detail colour; by default the hills stay legal
+    expect(keys("e=cross_patriarchal_mount&o=none&p=gules%2Fargent&h=second%3Avert")).toContain("note.armesFausses");
+    const plain = generate(decodeAnswers("e=cross_patriarchal_mount&o=none&p=gules%2Fargent"));
+    expect(plain.notes.map((n) => n.msg.key)).not.toContain("note.armesFausses");
+    expect(blazon(plain.chosen.arms)).toBe("Gules, a patriarchal cross argent issuing from a trimount Or");
+    // with the rules off, a pair that breaks them
+    expect(keys("x=true&p=gules%2Fazure&e=lion_rampant&o=none")).toContain("note.armesFausses");
+    // a realm's own: Jerusalem's gold on silver, Anjou-Sicily's red label on blue
+    expect(keys("r=king&t=jerusalem&y=1200&e=lion_rampant&o=none")).toContain("note.armesAEnquerirJerusalem");
+    expect(keys("y=1270&c=sicily&e=lion_rampant&o=none&k=single%231")).toContain("note.armesAEnquerir");
+    expect(keys("e=lion_rampant&o=none")).not.toContain("note.armesFausses");
   });
 
   it("keeps the maiden's hair and crown clear of the field and the eagle", () => {
@@ -359,6 +428,88 @@ describe("generator", () => {
     expect(encodeAnswers(DEFAULT_ANSWERS)).not.toContain("p3");
     expect(decodeAnswers("p3=ermine").third).toBe("");
     expect(decodeAnswers("p3=green").third).toBe("");
+  });
+
+  it("quarters in six from 1435, and in eight only with history set aside", () => {
+    const king: Answers = { ...DEFAULT_ANSWERS, year: 1440, rank: "king", titles: ["castile", "aragon", "hungary", "bohemia", "poland"], emblem: "lion_rampant", origin: "none" };
+    const sizes = (a: Answers) => new Set(generate(a).candidates.map((c) => c.arms.quarterly?.q.length ?? 0));
+    const r = generate(king);
+    expect(sizes(king)).toContain(6);
+    expect(r.candidates.every((c) => !c.dropped.some((d) => d.key === "drop.title"))).toBe(true);
+    // five coats: the first is repeated in the sixth quarter, as three coats go 1 and 4 / 2 / 3
+    const surtout = r.candidates.find((c) => c.arms.overall?.own && c.arms.quarterly)!.arms.quarterly!;
+    expect(surtout.of!.map((x) => x?.id)).toEqual(["castile", "aragon", "hungary", "bohemia", "poland", "castile"]);
+    expect(blazon(r.candidates.find((c) => c.arms.quarterly?.q.length === 6)!.arms)).toMatch(/^Quarterly of six: /);
+    // before 1435 at most three titles and four quarters, in the link as well
+    expect(Math.max(...sizes({ ...king, year: 1430 }))).toBe(4);
+    expect(decodeAnswers(encodeAnswers({ ...king, year: 1430 })).titles).toEqual(["castile", "aragon", "hungary"]);
+    expect(decodeAnswers(encodeAnswers(king)).titles).toEqual(king.titles);
+    expect(setAnswer(king, "year", 1430).titles).toEqual(["castile", "aragon", "hungary"]);
+    // eight has no example before 1453: only with the rules off, in any year
+    const seven = ["castile", "aragon", "hungary", "bohemia", "poland", "france", "england"];
+    expect(maxTitles({ year: 1450, free: false })).toBe(5);
+    expect(sizes({ ...king, year: 1200, free: true, titles: seven })).toContain(8);
+  });
+
+  it("impales two coats from 1370, the more honourable on the dexter", () => {
+    const impaled = (c: { arms: Arms }) => c.arms.quarterly?.q.length === 2;
+    const sides = (a: Answers) => generate(a).candidates.filter(impaled).map((c) => c.arms.quarterly!.of!.map((x) => x?.id ?? null));
+    const count: Answers = { ...DEFAULT_ANSWERS, year: 1370, rank: "count", titles: ["flanders"], emblem: "lion_rampant", origin: "none", palette: "gules/or" };
+    // a lord keeps the family on the dexter (Gelre 646: Aragon impaling Urgell)
+    expect(sides(count)[0]).toEqual([null, "flanders"]);
+    // a king puts the realm there, and a claimed kingdom goes there too (Gelre 310: Jerusalem impaling Anjou)
+    expect(sides({ ...count, rank: "king", titles: ["castile"] })[0]).toEqual(["castile", null]);
+    expect(sides({ ...count, titles: [], claim: "jerusalem" })[0]).toEqual(["jerusalem", null]);
+    // not before 1370 unless history is set aside; only with exactly two coats; two at most
+    expect(sides({ ...count, year: 1369 })).toEqual([]);
+    expect(sides({ ...count, year: 1200, free: true })).not.toEqual([]);
+    expect(sides({ ...count, titles: ["flanders", "holland"] })).toEqual([]);
+    expect(sides(count).length).toBeLessThanOrEqual(2);
+    const r = generate({ ...count, titles: [], claim: "jerusalem", emblem: "fleur", palette: "azure/or", layout: "single#1" });
+    expect(blazon(r.chosen.arms)).toBe("Per pale: dexter, Argent, a cross potent between four crosslets Or (for Jerusalem); sinister, Azure, three fleurs-de-lis Or");
+    expect(r.notes.some((n) => n.msg.key === "note.impaled")).toBe(true);
+    for (let i = 0; i < 200; i++) {
+      const pick = <T,>(xs: readonly T[], salt: number) => xs[hash(`imp:${i}:${salt}`) % xs.length];
+      const rank = pick(["count", "duke", "king", "emperor"] as const, 1);
+      const a: Answers = { ...DEFAULT_ANSWERS, year: 1400, rank, emblem: pick(EMBLEM_FAMILIES.flatMap((f) => f.charges), 2), cadency: pick(CADENCY, 3),
+        ...(i % 2 ? { titles: [pick(REALM_IDS.filter((id) => canHold(rank, id)), 4)] } : { claim: pick(REALM_IDS, 5) }) };
+      for (const c of generate(a).candidates.filter(impaled)) {
+        expect(lintArms(c.arms), `${c.id} ${JSON.stringify(a)}`).toEqual([]);
+        expect(checkArms(c.arms).filter((x) => x.level === "error"), `${c.id} ${JSON.stringify(a)}`).toEqual([]);
+      }
+    }
+  });
+
+  it("keeps a quarterly coat inside a quarter apart from the shield's own quarters in the export", () => {
+    // claiming Castile-León: its quarters must not be taken for the shield's 1st and 4th, which
+    // the export leaves to the background
+    const r = generate({ ...DEFAULT_ANSWERS, year: 1300, claim: "castile", emblem: "lion_rampant", origin: "none", palette: "azure/or" });
+    const c = r.candidates.find((c) => c.arms.quarterly?.q.length === 4)!;
+    const tagged = layout(c.arms).filter((n): n is Extract<typeof n, { bg?: string }> & { t: string } => "bg" in n && (n.bg === "q1" || n.bg === "q4") && "t" in n);
+    expect(tagged.map((n) => n.t)).toEqual(["azure", "azure"]);
+  });
+
+  it("lays out six and eight quarters legally and within the layer budget", { timeout: 60_000 }, () => {
+    const emblems = EMBLEM_FAMILIES.flatMap((f) => f.charges);
+    const pick = <T,>(xs: readonly T[], i: number, salt: number) => xs[hash(`many:${i}:${salt}`) % xs.length];
+    let n = 0;
+    for (let i = 0; i < 300; i++) {
+      const free = i % 3 === 0;
+      const year = free ? pick([900, 1200, 1440], i, 1) : pick([1435, 1450], i, 1);
+      const rank = pick(["count", "duke", "king", "emperor"] as const, i, 2);
+      const any = REALM_IDS.filter((id) => (free ? holdable(id) : canHold(rank, id)));
+      const titles = [...new Set(Array.from({ length: maxTitles({ year, free }) }, (_, j) => pick(any, i, 10 + j)))];
+      const a: Answers = { ...DEFAULT_ANSWERS, year, free, rank, titles, emblem: pick(emblems, i, 3), claim: pick(["none", ...REALM_IDS], i, 4), cadency: pick(CADENCY, i, 5) };
+      for (const c of generate(a).candidates) {
+        if ((c.arms.quarterly?.q.length ?? 0) <= 4) continue;
+        n++;
+        const at = `${c.id} ${JSON.stringify(a)}`;
+        expect(lintArms(c.arms), at).toEqual([]);
+        expect(checkArms(c.arms).filter((x) => x.level === "error"), at).toEqual([]);
+        if (!isRaster(c.arms)) expect(exportCk3(c.arms).instances, at).toBeLessThan(150);
+      }
+    }
+    expect(n).toBeGreaterThan(500);
   });
 
   it("never lets a cadency mark overlap the top of the shield", { timeout: 60_000 }, () => {

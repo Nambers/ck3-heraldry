@@ -32,6 +32,13 @@ export const CASES: Record<string, Partial<Answers>> = {
   king_one_realm: { year: 1300, rank: "king", titles: ["aragon"], emblem: "eagle", origin: "none", palette: "azure/or", name: "Barcelona" },
   emperor_only: { year: 1440, rank: "emperor", titles: ["hre"], emblem: "lion_rampant", origin: "none", palette: "gules/argent", name: "Habsburg" },
   emperor_hre: { year: 1440, rank: "emperor", titles: ["hre", "hungary", "bohemia"], emblem: "lion_rampant", origin: "none", palette: "gules/argent", name: "Luxemburg" },
+  // later practices: six quarters from 1435, eight with history set aside, impalement from 1370
+  six_quarters: { year: 1440, rank: "king", titles: ["hungary", "jerusalem", "cyprus", "bohemia", "poland"], emblem: "fleur", origin: "none", palette: "azure/or", name: "Anjou" },
+  eight_quarters: { year: 1440, free: true, rank: "duke", titles: ["castile", "england", "aragon", "hungary", "bohemia", "poland", "flanders"], emblem: "lion_rampant", origin: "none", palette: "or/sable", cadency: "label" },
+  impaled_claim: { year: 1390, claim: "jerusalem", emblem: "fleur", origin: "none", palette: "azure/or", name: "Anjou" },
+  impaled_castile: { year: 1440, rank: "king", titles: ["castile"], emblem: "eagle", origin: "none", palette: "or/sable" },
+  // a quartered realm inside a quarter: its castles must stay red in the export
+  claim_castile: { year: 1300, claim: "castile", emblem: "lion_rampant", origin: "none", palette: "azure/or" },
 };
 
 mkdirSync("out/ex", { recursive: true });

@@ -8,7 +8,7 @@ import { CHIEF_INDENTED, layout, ordinaryPolys, type Box, type LNode } from "./l
 type Pt = [number, number];
 
 export interface LintIssue {
-  kind: "charge-overlap" | "covers-chief" | "covers-canton" | "on-ordinary" | "under-brisure" | "under-escutcheon" | "cut-off";
+  kind: "charge-overlap" | "covers-chief" | "covers-canton" | "on-ordinary" | "under-brisure" | "under-escutcheon" | "cut-off" | "wrong-half";
   a: string;
   b?: string;
   /** fraction of the smaller box affected */
@@ -108,6 +108,20 @@ function lintNodes(nodes: LNode[], outline: Pt[], issues: LintIssue[]) {
         const amount = frac(pts, (p) => inPoly(p, heater(n.box)));
         if (amount > LIMIT.region) issues.push({ kind: "under-escutcheon", a: name(c), amount });
       }
+    }
+  }
+  // on a field divided per pale or per fess, a charge given one half's tincture to lie on stays on that half
+  for (const d of nodes) {
+    if (d.type !== "division" || (d.kind !== "per_pale" && d.kind !== "per_fess") || d.t[0] === d.t[1]) continue;
+    const across = d.kind === "per_pale";
+    const mid = across ? d.box.x + d.box.w / 2 : d.box.y + d.box.h / 2;
+    for (const c of field) {
+      const [cx, cy] = [c.box.x + c.box.w / 2, c.box.y + c.box.h / 2];
+      if (!inBox(d.box)([cx, cy]) || c.on !== "field") continue;
+      const side = c.under === d.t[0] ? 0 : c.under === d.t[1] ? 1 : -1;
+      if (side < 0) continue;
+      const amount = frac(samples(c.box), ([x, y]) => ((across ? x : y) > mid ? 1 : 0) !== side);
+      if (amount > LIMIT.region) issues.push({ kind: "wrong-half", a: name(c), b: d.kind, amount });
     }
   }
   // nothing but a semé may be cut off by the edge

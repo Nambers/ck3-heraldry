@@ -8,7 +8,7 @@
 // src/west/answers.ts; `layout` is the `k` parameter).
 
 import type { Answers } from "../west/answers.ts";
-import { CAPO_SOURCE } from "./sources.ts";
+import { CAPO_SOURCE, LATE_SOURCES } from "./sources.ts";
 
 export type Text = { zh: string; en: string };
 
@@ -78,6 +78,28 @@ export const SECTIONS: Section[] = [
         answers: { name: "Österreich", year: 1440, origin: "none", emblem: "none", rank: "emperor", titles: ["hre"], palette: "gules/argent", layout: "ordinary-fess#1" },
         blazon: "Or, a double-headed eagle displayed sable, armed gules and nimbed Or, bearing on its breast an escutcheon of the family arms (Gules, a fess argent)",
         links: [{ commons: "CoA_Frederick_III_of_Habsburg.svg" }, { wiki: "Frederick_III,_Holy_Roman_Emperor" }],
+      },
+      {
+        id: "hungary-bela",
+        title: { zh: "匈牙利的双十字（贝拉三世，1172–1196）", en: "Hungary's double cross (Béla III, 1172–1196)" },
+        note: {
+          zh: "红底银色双横十字，见于贝拉三世的纹章和钱币；1202 年后条纹成了主纹章。只选信仰标志双横十字、配红底银色，第一个候选就是它：十字类单独成纹时默认一个居中。",
+          en: "A silver patriarchal cross on red, on Béla III's arms and coins; after 1202 the stripes became the arms. Choose only the patriarchal cross as faith symbol, silver on red, and it is the first layout: a cross borne alone is one large cross by default.",
+        },
+        answers: { name: "Arpad", year: 1190, origin: "none", emblem: "none", faith: "cross_patriarchal", palette: "gules/argent", layout: "one#0" },
+        blazon: "Gules, a patriarchal cross argent",
+        links: [{ wiki: "Coat_of_arms_of_Hungary" }],
+      },
+      {
+        id: "hungary-trimount",
+        title: { zh: "三峰山上的双十字", en: "The double cross on its hills" },
+        note: {
+          zh: "原版 CK3 的匈牙利王国纹章：银色双十字立在绿色三峰山上。山的颜色默认和十字同类，这里在「细节颜色」里把它改成绿色；绿山压在红底上违反色彩规则，结果里会注明 armes fausses / armes à enquérir。三峰山约在 13 世纪后期才加到十字下面。",
+          en: "Vanilla CK3's kingdom of Hungary: a silver double cross on three green hills. The hills default to the cross's class; here they are made green under “Detail colours”. Green on red breaks the rule of tincture, and the result says so (armes fausses, armes à enquérir). The hills came under the cross in the later 13th century.",
+        },
+        answers: { name: "Arpad", year: 1300, origin: "none", emblem: "cross_patriarchal_mount", palette: "gules/argent", parts: "second:vert", layout: "single#0" },
+        blazon: "Gules, a patriarchal cross argent issuing from a trimount vert",
+        links: [{ wiki: "Coat_of_arms_of_Hungary" }],
       },
       {
         id: "bourbon-spain",
@@ -302,6 +324,83 @@ export const SECTIONS: Section[] = [
       en: "From three English rolls of arms of the later 13th century (the 1864 edition by Walford and Perceval), each reproduced exactly by the site; the links name the roll and the number. Ordinaries, lines, and charges around and on them.",
     },
     examples: [
+      {
+        id: "grendon",
+        title: { zh: "格伦登", en: "Grendon" },
+        note: {
+          zh: "银底两道红色山形带（two chevrons）。在「几何图形与线条」里选两道山形带；有图案时它会换成一道山形带，因为两道之间放不下图案。",
+          en: "Two red chevrons on silver. Choose two chevrons under “Geometry and lines”; with charges a single chevron is used instead, as there is no room between two.",
+        },
+        answers: { name: "Grendon", year: 1285, origin: "none", emblem: "none", palette: "argent/gules", geom: "ord:chevrons2", layout: "ordinary-chevrons2#0" },
+        blazon: "Argent, two chevrons gules",
+        links: [{ href: "https://archive.org/details/threerollsofarms00walfrich", label: { zh: "Charles' Roll 第 106 面（Walford & Perceval 1864）", en: "Charles' Roll no. 106 (Walford & Perceval 1864)" } }],
+      },
+      {
+        id: "fitzwalter",
+        title: { zh: "菲茨沃尔特", en: "FitzWalter" },
+        note: {
+          zh: "金底红色横带，夹在两道山形带之间。原版有现成的贴图，上面那道山形带只到横带为止。",
+          en: "Or, a fess between two chevrons gules. Vanilla has a texture for it, the upper chevron stopping at the fess.",
+        },
+        answers: { name: "FitzWalter", year: 1285, origin: "none", emblem: "none", palette: "or/gules", geom: "ord:fess_chevrons", layout: "ordinary-fess_chevrons#0" },
+        blazon: "Or, a fess between two chevrons gules",
+        links: [{ href: "https://archive.org/details/threerollsofarms00walfrich", label: { zh: "St George's Roll 第 51 面（Walford & Perceval 1864）", en: "St George's Roll no. 51 (Walford & Perceval 1864)" } }],
+      },
+      {
+        id: "sulley",
+        title: { zh: "苏利", en: "Sulley" },
+        note: {
+          zh: "金底两道红色斜带。",
+          en: "Two red bends on gold.",
+        },
+        answers: { name: "Sulley", year: 1285, origin: "none", emblem: "none", palette: "or/gules", geom: "ord:bends2", layout: "ordinary-bends2#0" },
+        blazon: "Or, two bends gules",
+        links: [{ href: "https://archive.org/details/threerollsofarms00walfrich", label: { zh: "St George's Roll 第 67 面（Walford & Perceval 1864）", en: "St George's Roll no. 67 (Walford & Perceval 1864)" } }],
+      },
+      {
+        id: "talbot",
+        title: { zh: "塔尔博特", en: "Talbot" },
+        note: {
+          zh: "金底五道红色细斜带（bendlets）。道数多了每道就更细，两道叫斜带，三到五道叫细斜带。",
+          en: "Five red bendlets on gold. The more there are, the narrower each: two are bends, three to five bendlets.",
+        },
+        answers: { name: "Talbot", year: 1285, origin: "none", emblem: "none", palette: "or/gules", geom: "ord:bends5", layout: "ordinary-bends5#0" },
+        blazon: "Or, five bendlets gules",
+        links: [{ href: "https://archive.org/details/threerollsofarms00walfrich", label: { zh: "St George's Roll 第 652 面（Walford & Perceval 1864）", en: "St George's Roll no. 652 (Walford & Perceval 1864)" } }],
+      },
+      {
+        id: "stuteville",
+        title: { zh: "斯图特维尔", en: "Stuteville" },
+        note: {
+          zh: "银底六道红色细横条（barrulets）。刊本注明另一卷画成十四道的横条纹（barry of fourteen）。",
+          en: "Six red barrulets on silver. The edition notes that another roll paints it barry of fourteen.",
+        },
+        answers: { name: "Stuteville", year: 1285, origin: "none", emblem: "none", palette: "argent/gules", geom: "ord:barrulets", layout: "ordinary-barrulets#0" },
+        blazon: "Argent, six barrulets gules",
+        links: [{ href: "https://archive.org/details/threerollsofarms00walfrich", label: { zh: "St George's Roll 第 186 面（Walford & Perceval 1864）", en: "St George's Roll no. 186 (Walford & Perceval 1864)" } }],
+      },
+      {
+        id: "st-owen",
+        title: { zh: "圣欧文", en: "Saint Owen" },
+        note: {
+          zh: "金底三道红色横条。",
+          en: "Three red bars on gold.",
+        },
+        answers: { name: "Saint Owen", year: 1285, origin: "none", emblem: "none", palette: "or/gules", geom: "ord:bars3", layout: "ordinary-bars3#0" },
+        blazon: "Or, three bars gules",
+        links: [{ href: "https://archive.org/details/threerollsofarms00walfrich", label: { zh: "Charles' Roll 第 131 面（Walford & Perceval 1864）", en: "Charles' Roll no. 131 (Walford & Perceval 1864)" } }],
+      },
+      {
+        id: "breynin",
+        title: { zh: "布雷宁", en: "Breynin" },
+        note: {
+          zh: "金底三道红色竖条（pallets）。四道竖条是阿拉贡的纹章，本站原来就有。",
+          en: "Three red pallets on gold. Four are the arms of Aragon, which the site already had.",
+        },
+        answers: { name: "Breynin", year: 1275, origin: "none", emblem: "none", palette: "or/gules", geom: "ord:pales3", layout: "ordinary-pales3#0" },
+        blazon: "Or, three pallets gules",
+        links: [{ href: "https://archive.org/details/threerollsofarms00walfrich", label: { zh: "Walford's Roll 第 81 面（Walford & Perceval 1864）", en: "Walford's Roll no. 81 (Walford & Perceval 1864)" } }],
+      },
       {
         id: "ufford",
         title: { zh: "阿福德", en: "Ufford" },
@@ -600,11 +699,21 @@ export const SECTIONS: Section[] = [
         id: "king-surtout",
         title: { zh: "国王持有匈牙利与波兰", en: "A king of Hungary and Poland" },
         note: {
-          zh: "国王、皇帝把领地纹章放在前面，家族纹章作正中的小盾（en surtout）。",
-          en: "Kings and emperors put their realms first and their family arms on an escutcheon in the middle (en surtout).",
+          zh: "国王、皇帝把领地纹章放在前面，家族纹章作正中的小盾（en surtout）。1370 年的匈牙利是安茹王朝的纹章：阿尔帕德条纹和法兰西百合左右对分（Gelre 纹章卷第 500 面），放进第 1、4 区，就成了一区里的左右对分。",
+          en: "Kings and emperors put their realms first and their family arms on an escutcheon in the middle (en surtout). Hungary in 1370 bears the Angevin arms, the Árpád stripes impaling the lilies of France (Gelre Armorial no. 500), so its quarters are each impaled."
         },
         answers: { name: "Lackland", year: 1370, origin: "none", emblem: "mullet", rank: "king", titles: ["hungary", "poland"], palette: "azure/or", layout: "single#0" },
         links: [{ wiki: "Inescutcheon" }],
+      },
+      {
+        id: "six-quarters",
+        title: { zh: "六区（1435 年起）", en: "Quarterly of six (from 1435)" },
+        note: {
+          zh: "超过四区的组合到 1430 年代才出现：昂儒的勒内 1435 年起用六区，上排匈牙利、那不勒斯、耶路撒冷三个王国，下排安茹、巴尔、洛林三个公国。这里是同一种排法：1440 年一位国王持有五个王国，家族纹章（蓝底三金百合）排在第六区。本站还没有那不勒斯、巴尔和洛林的纹章，所以不是勒内的原样。年份早于 1435 年时最多选三个头衔、分四区；勾选「不考虑历史真实性」可以分到八区。",
+          en: "More than four quarters only appears in the 1430s: from 1435 René of Anjou bore six, the kingdoms of Hungary, Naples and Jerusalem above and the duchies of Anjou, Bar and Lorraine below. This is the same arrangement: a king in 1440 holding five realms, the family arms (three gold lilies on blue) in the sixth quarter. The site has no arms for Naples, Bar or Lorraine yet, so these are not René's own. Before 1435 you can hold three titles at most, in four quarters; with “Ignore historical accuracy” ticked, up to eight.",
+        },
+        answers: { name: "Anjou", year: 1440, origin: "none", emblem: "fleur", rank: "king", titles: ["hungary", "jerusalem", "cyprus", "bohemia", "poland"], palette: "azure/or", layout: "single#1" },
+        links: [{ href: LATE_SOURCES.quarterlyOfSix!, label: { zh: "剑桥王后学院：沿用勒内的六区纹章", en: "Queens' College, Cambridge: René's six quarters, still borne" } }],
       },
       {
         id: "tsar-bulgaria",
@@ -635,6 +744,17 @@ export const SECTIONS: Section[] = [
         },
         answers: { name: "Valence", year: 1340, origin: "none", emblem: "lion_rampant", claim: "france", palette: "azure/argent", layout: "single#0" },
         links: [{ wiki: "Royal_coat_of_arms_of_England" }],
+      },
+      {
+        id: "claim-impaled",
+        title: { zh: "宣称耶路撒冷：左右对分（1370 年起）", en: "Claiming Jerusalem: impaled (from 1370)" },
+        note: {
+          zh: "两面纹章各占半边，左边（持盾人的右手边）是尊位。Gelre 纹章卷（约 1370–1414）第 310 面：安茹公爵路易二世把宣称的耶路撒冷放左边，安茹放右边。原版的安茹是蓝底散布金百合、红色镶边；本站还没有镶边，所以这里用蓝底三金百合。13 世纪的纹章卷里还没有左右对分，所以 1370 年起才出现。",
+          en: "Two coats side by side, each in one half; the dexter (the bearer's right, the viewer's left) is the place of honour. The Gelre Armorial (c. 1370–1414), no. 310: Louis II, Duke of Anjou, bore the Jerusalem he claimed on the dexter and Anjou on the sinister. His Anjou is blue semé of gold lilies within a red bordure; the site has no bordures yet, so three gold lilies on blue stand in. The 13th-century rolls have no impalement, so it appears from 1370.",
+        },
+        answers: { name: "Anjou", year: 1390, origin: "none", emblem: "fleur", claim: "jerusalem", palette: "azure/or", layout: "single#1" },
+        blazon: "Per pale: dexter, Argent, a cross potent between four crosslets Or (for Jerusalem); sinister, Azure, three fleurs-de-lis Or",
+        links: [{ href: "http://www.heraldique-europeenne.org/Armoriaux/Gelre/F46r.htm", label: { zh: "Gelre 纹章卷 f. 46r（第 310 面）", en: "Gelre Armorial, f. 46r (no. 310)" } }, { wiki: "Impalement_(heraldry)" }],
       },
     ],
   },
@@ -735,13 +855,34 @@ export const SECTIONS: Section[] = [
       },
       {
         id: "free",
-        title: { zh: "不考虑历史真实性", en: "History switched off" },
+        title: { zh: "不考虑历史真实性：只管年代", en: "History switched off: the period only" },
         note: {
-          zh: "勾选右上角的框后，900 年的伯爵也能持有法国，金底银鹰这种违反色彩规则的配色也能选。CK3 的技术限制仍然保留。",
-          en: "With the box at the top right ticked, a count in 900 may hold France, and silver on gold is allowed despite the rule of tincture. CK3's technical limits still apply.",
+          zh: "勾选右上角的框后，年份不再限制王国纹章和晚期做法：900 年的伯爵也能以神圣罗马帝国为领主，借用它后来的纹章，不再提示时代不符。超出爵位的头衔和违反色彩规则的配色不归这个框管，见下面两例。CK3 的技术限制仍然保留。",
+          en: "With the box at the top right ticked, the year no longer limits realm arms and later practices: a count in 900 may have the Empire as liege and borrow its later arms, without remark. Titles above the rank and colours against the rule of tincture are not this box's business: see the next two. CK3's technical limits still apply.",
         },
-        answers: { name: "Anywhere", year: 900, origin: "none", emblem: "eagle", rank: "count", titles: ["france"], palette: "or/argent", free: true, layout: "single#0" },
+        answers: { name: "Anywhere", year: 900, origin: "none", emblem: "eagle", liege: "hre", palette: "or/sable", free: true, layout: "single#0" },
+        links: [{ wiki: "Anachronism" }],
+      },
+      {
+        id: "armes-a-enquerir",
+        title: { zh: "违反色彩规则：armes à enquérir", en: "Against the rule of tincture: armes à enquérir" },
+        note: {
+          zh: "金底银鹰，金属叠金属。违规的配色折叠在配色题下面，展开就能选，不用勾选任何框：这样的纹章真实存在，英法纹章学叫 armes fausses（错误的纹章）或 armes à enquérir（引人追问的纹章），最有名的是耶路撒冷的金十字配银底。结果里会注明违规之处。",
+          en: "A silver eagle on gold, metal on metal. The pairs against the rule are folded away under the colour question, to be opened and picked without any box: such arms did exist; English and French heralds call them armes fausses (false arms) or armes à enquérir (arms of inquiry), Jerusalem's gold on silver being the best known. The result points out the breach.",
+        },
+        answers: { name: "Inquiry", year: 1250, origin: "none", emblem: "eagle", palette: "or/argent", layout: "single#0" },
+        blazon: "Or, an eagle displayed argent",
         links: [{ wiki: "Rule_of_tincture" }],
+      },
+      {
+        id: "above-rank",
+        title: { zh: "超出爵位的头衔", en: "A title above the rank" },
+        note: {
+          zh: "伯爵持有法兰西王国：头衔题里，超出爵位的头衔折叠在下面，展开就能选。CK3 里爵位就是最高的头衔，持有王国就会升为国王；这里纹章照样把它组合进去，结果里会提示。",
+          en: "A count holding the kingdom of France: titles above the rank are folded away under the titles question, to be opened and picked. In CK3 your rank is your highest title, so holding a kingdom makes you a king; the arms marshal it all the same, and the result says so.",
+        },
+        answers: { name: "Upstart", year: 1250, origin: "none", emblem: "lion_rampant", rank: "count", titles: ["france"], palette: "gules/or", layout: "single#0" },
+        links: [{ href: "https://ck3.paradoxwikis.com/Titles", label: { zh: "CK3 维基：Titles", en: "CK3 wiki: Titles" } }],
       },
     ],
   },

@@ -8,15 +8,16 @@
 
 import { CHARGES, isEagleLike } from "../charges.ts";
 import type { Arms, Charge, ChargeId, Division, Escutcheon, Field, OrdinaryKind, Placed } from "../heraldry/ast.ts";
-import { LINES, firstTincture, plain, type Line } from "../heraldry/ast.ts";
-import { checkArms, signature } from "../heraldry/rules.ts";
+import { LINES, firstTincture, isImpaled, plain, quarterCols, type Line } from "../heraldry/ast.ts";
+import { checkArms, signature, unmarked } from "../heraldry/rules.ts";
 import { contrasts, isMetal, type Tincture } from "../heraldry/tincture.ts";
+import { opens } from "../heraldry/era.ts";
 import { ON, escutcheonSafe } from "../layout.ts";
-import { REALMS, REALM_IDS, canHold, realmAt, realmMainCharge, realmPalette, type Period } from "../realms.ts";
+import { REALMS, REALM_IDS, canHold, holdable, realmAt, realmMainCharge, realmPalette, type Period } from "../realms.ts";
 import type { Candidate as BaseCandidate, Msg, Note, Param, Result as BaseResult } from "../designer/types.ts";
 import { defaultCrown } from "../ck3/export.ts";
-import { paletteOf, parseGeom, parseParts, thirdOf, type Answers, type Geom, type Style } from "./answers.ts";
-import { GEOM, PARTS, PART_ROLE, type Part } from "./questions.ts";
+import { maxQuarters, maxTitles, paletteOf, parseGeom, parseParts, thirdOf, type Answers, type Geom, type Style } from "./answers.ts";
+import { DIMINISHES, GEOM, ORD_BY_NAME, PARTS, PART_ROLE, type Part } from "./questions.ts";
 import { legend } from "./legend.ts";
 
 export type { Msg, Note, Param } from "../designer/types.ts";
@@ -63,6 +64,9 @@ function mk(id: ChargeId, t: Tincture, count: 1 | 3 | 6 = 1): Charge {
     c.crowned = defaultCrown(t, under ?? t);
   }
   if (id === "keys_crossed") c.second = t === "argent" ? "or" : "argent";
+  // the hills take the cross's class (metal or colour) but not its tincture: the cross contrasts
+  // whatever it lies on, so they do too, wherever the charge goes
+  if (id === "cross_patriarchal_mount") c.second = isMetal(t) ? (t === "or" ? "argent" : "or") : (["vert", "azure", "gules", "sable", "purpure"] as Tincture[]).find((x) => x !== t)!;
   // the player's detail colours, for the parts this charge has
   const roles = new Set(CHARGES[id].ck3.flatMap((p) => p.colors));
   for (const part of PARTS) {
@@ -90,8 +94,10 @@ function contrasting(under: Tincture | null, avoid: Tincture[], prefer?: Tinctur
 
 // what the family name picks from, in a fixed order (questions.ts GEOM); the player may pick instead
 /** without charges there is room for the diminutives too */
-const PLAIN_ORDINARY_ROTATION: OrdinaryKind[] = [...GEOM.ord];
-const ORDINARY_ROTATION: OrdinaryKind[] = PLAIN_ORDINARY_ROTATION.filter((k) => k !== "bars" && k !== "chevronels");
+const PLAIN_ORDINARY_ROTATION: OrdinaryKind[] = [...ORD_BY_NAME];
+/** what the player may choose: the rest follow in this order */
+const ALL_ORDINARIES: OrdinaryKind[] = [...GEOM.ord];
+const ORDINARY_ROTATION: OrdinaryKind[] = PLAIN_ORDINARY_ROTATION.filter((k) => !DIMINISHES[k]);
 const DIVISION_ROTATION: Division[] = [...GEOM.div];
 const VARIED_ROTATION: Division[] = [...GEOM.var];
 /** furs have candidates of their own, built the way the rolls use them */
@@ -131,8 +137,8 @@ function templates(Fp: Tincture, C: Tincture, third: Tincture | undefined, A: Ch
     const at = chosen ? list.indexOf(chosen as T) : -1;
     return list[((at >= 0 ? at : byName % list.length) + i) % list.length];
   };
-  // two bars or three chevronels leave no room for charges: with charges, the fess or chevron they diminish
-  const chargedOrd = geom.ord === "bars" ? "fess" : geom.ord === "chevronels" ? "chevron" : geom.ord;
+  // diminutives leave no room for charges: with charges, the ordinary they diminish
+  const chargedOrd = (geom.ord && DIMINISHES[geom.ord as OrdinaryKind]) || geom.ord;
   const ord = (i: number) => rot(ORDINARY_ROTATION, chargedOrd, i, seed);
   const div = rot(DIVISION_ROTATION, geom.div, 0, seed);
   const varied = rot(VARIED_ROTATION, geom.var, 0, seed >>> 3);
@@ -178,6 +184,13 @@ function templates(Fp: Tincture, C: Tincture, third: Tincture | undefined, A: Ch
       label: [m("layout.single", { a: { charge: single.id } })],
       arms: { field, charges: [at("center", ch(single, C, small(single.id) ? 3 : 1))] },
     });
+    // a small charge borne alone and large; crosses mostly are (a cross moline; Hungary's
+    // patriarchal cross), so for them it comes before the three
+    if (small(single.id)) {
+      const one: Base = { id: "one", style: "simple", uses: which, label: [m("layout.one", { a: { charge: single.id } })], arms: { field, charges: [at("center", ch(single, C))] } };
+      if (CHARGES[single.id].cat === "cross") out.splice(out.length - 1, 0, one);
+      else out.push(one);
+    }
     // in a line, or six: English-style counts
     if (aspect(single.id) >= 1.25) {
       out.push({
@@ -306,7 +319,8 @@ function templates(Fp: Tincture, C: Tincture, third: Tincture | undefined, A: Ch
   }
 
   if (!single) {
-    const pord = (i: number) => rot(PLAIN_ORDINARY_ROTATION, geom.ord, i, seed);
+    // a chosen ordinary may be one the name never picks: then the next one follows it in the full list
+    const pord = (i: number) => rot(geom.ord ? ALL_ORDINARIES : PLAIN_ORDINARY_ROTATION, geom.ord, i, seed);
     for (const [i, k] of [pord(0), pord(1)].entries()) {
       const line = i === 0 ? lineFor(k, 5) : undefined;
       out.push({ id: `ordinary-${k}`, style: "ordinary", uses: new Set(), label: [m("layout.ordinary", { o: { ord: k, line } })], arms: { field, ordinary: withLine({ kind: k, t: C }, line), charges: [] } });
@@ -372,7 +386,7 @@ function layoutName(base: Base, arms: Arms): Msg[] {
   if (arms.granted) return [m("lname.grant", { r: { realm: arms.granted.id } }), main];
   if (arms.overall?.own) return [m("lname.surtout"), main];
   if (arms.charges.some((p) => p.charge.breast && "own" in p.charge.breast && p.charge.breast.own)) return [m("lname.imperial"), main];
-  if (arms.quarterly) return [m("lname.quarterly"), main];
+  if (arms.quarterly) return [m(isImpaled(arms.quarterly) ? "lname.impaled" : arms.quarterly.q.length === 4 ? "lname.quarterly" : `lname.quarterly${arms.quarterly.q.length}`), main];
   if (arms.overall && !own.overall) return [main, m("lname.plusOverall")];
   const breast = q.charges.some((p) => p.charge.breast && "kind" in p.charge.breast);
   return breast ? [main, m("lname.plusBreast")] : [main];
@@ -400,17 +414,22 @@ function centreFree(arms: Arms): boolean {
 
 type Coat = { arms: Arms; of: string | null };
 
-/** marshal 2..4 coats quarterly: two as 1&4 / 2&3, three as 1&4 / 2 / 3; the rest do not fit */
-function quarterOf(coats: Coat[]): { arms: Arms; over: Coat[] } {
-  const L = coats.slice(0, 4);
-  const idx = L.length === 2 ? [0, 1, 1, 0] : L.length === 3 ? [0, 1, 2, 0] : [0, 1, 2, 3];
+/**
+ * Marshal 2..cap coats quarterly: two as 1&4 / 2&3, three as 1&4 / 2 / 3, four in four;
+ * five or six in six, seven or eight in eight (maxQuarters), an odd one out repeating the
+ * first in the last quarter as three do in four. The rest do not fit.
+ */
+function quarterOf(coats: Coat[], cap: 4 | 6 | 8): { arms: Arms; over: Coat[] } {
+  const L = coats.slice(0, cap);
+  const n = L.length;
+  const idx = n === 2 ? [0, 1, 1, 0] : n === 3 ? [0, 1, 2, 0] : [...L.keys(), ...(n % 2 ? [0] : [])];
   return {
     arms: {
       field: clone(L[0].arms.field),
       charges: [],
-      quarterly: { q: idx.map((i) => clone(L[i].arms)) as [Arms, Arms, Arms, Arms], of: idx.map((i) => (L[i].of ? { id: L[i].of! } : null)) },
+      quarterly: { q: idx.map((i) => clone(L[i].arms)), of: idx.map((i) => (L[i].of ? { id: L[i].of! } : null)) },
     },
-    over: coats.slice(4),
+    over: coats.slice(cap),
   };
 }
 
@@ -444,9 +463,18 @@ function placeSingle(arms: Arms, id: ChargeId, F: Tincture, C: Tincture, opts: {
   return null;
 }
 
+/** ordinaries that reach the middle of the top edge, where a cadency mark sits */
+const TOP_CENTRE = new Set<OrdinaryKind>(["pale", "cross", "pile", "orle", "tressure", "pallets", "pales3", "bends2", "bends3", "bends4", "bends5", "chevrons2", "fess_chevrons"]);
+
 /** does anything sit in the top band a label or a cadency mark needs? */
 function crowdedTop(arms: Arms): boolean {
-  if (arms.quarterly) return crowdedTop(arms.quarterly.q[0]) || crowdedTop(arms.quarterly.q[1]);
+  if (arms.quarterly) {
+    const cols = quarterCols(arms.quarterly);
+    const row = arms.quarterly.q.slice(0, cols);
+    // with three across, the mark sits inside the middle quarter, not on a partition line
+    const mid = cols % 2 ? row[(cols - 1) / 2] : undefined;
+    return row.some(crowdedTop) || !!(mid?.ordinary && TOP_CENTRE.has(mid.ordinary.kind));
+  }
   const a = arms;
   return (
     !!a.chief ||
@@ -507,11 +535,18 @@ export function generate(a: Answers): Result {
   const secondId = originId ?? deedCharge;
   const tertiary = originId ? deedCharge : undefined;
   const faith = a.faith !== "none" ? a.faith : undefined;
+  // a faith symbol with no other charge is the family's charge itself (as the patriarchal cross
+  // is Hungary's), not an addition that finds no place on a bare ordinary or division
+  const faithAlone = !!faith && !mainId && !secondId;
+  const addedFaith = faithAlone ? undefined : faith;
   const capo = liegeArms ? { realm: a.liege, arms: liegeArms } : null;
 
   // titles held now: arms of dominion (only titles the rank allows)
   const rank = a.rank;
-  const titles = a.titles.filter((id) => canHold(rank, id, a.free));
+  // titles above the rank are the player's own choice (folded away in the form): borne all the same
+  const titles = a.titles.filter(holdable).slice(0, maxTitles(a));
+  if (titles.some((id) => !canHold(rank, id))) note("history", "note.aboveRank", { r: { realm: titles.find((id) => !canHold(rank, id))! } });
+  const cap = maxQuarters(a);
   const doms = titles.flatMap((id) => {
     const r = realmAt(id, a.year, a.free);
     if ("unavailable" in r) {
@@ -523,7 +558,15 @@ export function generate(a: Answers): Result {
   });
   const sovereign = rank === "king" || rank === "emperor";
 
-  type Variant = { arms: Arms; label: Msg[]; dropped: Msg[] };
+  /** impaled: the two coats side by side, offered for the first layouts only (see build) */
+  type Variant = { arms: Arms; label: Msg[]; dropped: Msg[]; impaled?: true };
+  /** two coats side by side, dexter first (Gelre: Aragon impaling Urgell, Jerusalem impaling Anjou) */
+  const impale = (dexter: Coat, sinister: Coat, label: Msg[], dropped: Msg[]): Variant => ({
+    arms: { field: clone(dexter.arms.field), charges: [], quarterly: { q: [clone(dexter.arms), clone(sinister.arms)], of: [dexter, sinister].map((c) => (c.of ? { id: c.of } : null)) } },
+    label,
+    dropped,
+    impaled: true,
+  });
   /**
    * Lords keep the family arms first (1st and 4th quarters) and quarter their
    * titles in; sovereigns put the realms first and the family en surtout, or
@@ -543,8 +586,10 @@ export function generate(a: Answers): Result {
         dropped: [...dropped, ...over.map((c) => m("drop.title", { r: { realm: c.of! } }))],
       });
     if (!sovereign) {
-      const { arms, over } = quarterOf([own, ...realms]);
-      push(arms, realms.slice(0, 3), [], over);
+      const { arms, over } = quarterOf([own, ...realms], cap);
+      push(arms, realms.slice(0, cap - 1), [], over);
+      // lords keep the family on the dexter here too (Gelre 646: Aragon impaling Urgell)
+      if (realms.length === 1 && opens("impalement", a)) out.push(impale(own, realms[0], [...label, tag(realms[0]), m("place.impaled")], dropped));
       return out;
     }
     const famSafe = escutcheonSafe(fam);
@@ -553,14 +598,14 @@ export function generate(a: Answers): Result {
       if (realms.length === 1) {
         if (centreFree(realms[0].arms)) push({ ...clone(realms[0].arms), of: { id: realms[0].of! }, overall: surtout }, realms, [m("place.surtout")], []);
       } else {
-        const { arms, over } = quarterOf(realms);
+        const { arms, over } = quarterOf(realms, cap);
         arms.overall = surtout;
-        push(arms, realms.slice(0, 4), [m("place.surtout")], over);
+        push(arms, realms.slice(0, cap), [m("place.surtout")], over);
       }
     }
     // the family as a quarter after the realms (always room for it)
-    const { arms } = quarterOf([...realms.slice(0, 3), own]);
-    push(arms, realms.slice(0, 3), [m("place.ownQuarter")], realms.slice(3));
+    const { arms } = quarterOf([...realms.slice(0, cap - 1), own], cap);
+    push(arms, realms.slice(0, cap - 1), [m("place.ownQuarter")], realms.slice(cap - 1));
     const hre = doms.find((d) => d.id === "hre");
     if (rank === "emperor" && hre && famSafe) {
       const v: Arms = { ...clone(hre.arms), of: { id: "hre" } };
@@ -570,6 +615,8 @@ export function generate(a: Answers): Result {
         push(v, [{ arms: hre.arms, of: "hre" }], [m("place.imperial")], realms.filter((c) => c.of !== "hre"));
       }
     }
+    // or, with one realm, the two side by side: the realm on the dexter (the place of honour)
+    if (realms.length === 1 && opens("impalement", a)) out.push(impale(realms[0], own, [...label, tag(realms[0]), m("place.impaled")], dropped));
     return out;
   };
 
@@ -588,10 +635,11 @@ export function generate(a: Answers): Result {
 
   const build = (F: Tincture, C: Tincture): Candidate[] => {
     const Fx: Tincture = F === "ermine" ? "argent" : F;
-    const A = mainId ? mk(mainId, C) : undefined;
+    const A = mainId ? mk(mainId, C) : faithAlone ? mk(faith!, C) : undefined;
     const B = secondId ? mk(secondId, C) : undefined;
     const out: Candidate[] = [];
     const grants: { base: Base; v: Variant; weight: number }[] = [];
+    let impaledLeft = 2;
     for (const base of templates(F, C, third, A, B, seed, capo, parseGeom(a.geom))) {
       const variants: Variant[] = [];
       const dropped: Msg[] = [];
@@ -630,10 +678,10 @@ export function generate(a: Answers): Result {
       }
 
       // faith symbol
-      if (faith) {
-        const where = placeSingle(arms, faith, Fx, C);
-        if (where) label.push(m(`place.${where}`, { a: { charge: faith } }));
-        else dropped.push(m("drop.charge", { a: { charge: faith } }));
+      if (addedFaith) {
+        const where = placeSingle(arms, addedFaith, Fx, C);
+        if (where) label.push(m(`place.${where}`, { a: { charge: addedFaith } }));
+        else dropped.push(m("drop.charge", { a: { charge: addedFaith } }));
       }
 
       // held titles (and any claim with them) are marshalled; a claim alone goes
@@ -648,16 +696,16 @@ export function generate(a: Answers): Result {
             const v = clone(arms);
             mainEagle(v)!.charge.breast = clone(esc);
             variants.push({ arms: v, label: [...label, m("place.claimBreast", { r: { realm: a.claim } })], dropped });
-          } else if (faith) {
+          } else if (addedFaith) {
             // the breast holds the faith symbol: offer moving it elsewhere
             const v = clone(arms);
             mainEagle(v)!.charge.breast = clone(esc);
-            const where = placeSingle(v, faith, Fx, C, { breast: false });
+            const where = placeSingle(v, addedFaith, Fx, C, { breast: false });
             const l = label.filter((x) => x.key !== "place.breast");
             variants.push({
               arms: v,
-              label: [...l, m("place.claimBreast", { r: { realm: a.claim } }), ...(where ? [m(`place.${where}`, { a: { charge: faith } })] : [])],
-              dropped: where ? dropped : [...dropped, m("drop.charge", { a: { charge: faith } })],
+              label: [...l, m("place.claimBreast", { r: { realm: a.claim } }), ...(where ? [m(`place.${where}`, { a: { charge: addedFaith } })] : [])],
+              dropped: where ? dropped : [...dropped, m("drop.charge", { a: { charge: addedFaith } })],
             });
           }
         }
@@ -669,6 +717,8 @@ export function generate(a: Answers): Result {
           label: [...label, m("place.claimQuarterly", { r: { realm: a.claim } })],
           dropped,
         });
+        // the kingdom claimed on the dexter, as Louis II of Anjou and Hugues de Lusignan bore Jerusalem (Gelre 310, 1482)
+        if (opens("impalement", a)) variants.push(impale({ arms: claimArms, of: a.claim }, { arms, of: null }, [...label, m("place.claimImpaled", { r: { realm: a.claim } })], dropped));
       } else variants.push({ arms, label, dropped });
 
       // cadency: never on top of something else
@@ -686,10 +736,10 @@ export function generate(a: Answers): Result {
         const fam = before.arms;
         const lbl = [...before.label, m("place.grant", { r: { realm: a.liege } })];
         const drp = [...before.dropped];
-        if (faith) {
-          const where = placeSingle(fam, faith, Fx, C);
-          if (where) lbl.push(m(`place.${where}`, { a: { charge: faith } }));
-          else drp.push(m("drop.charge", { a: { charge: faith } }));
+        if (addedFaith) {
+          const where = placeSingle(fam, addedFaith, Fx, C);
+          if (where) lbl.push(m(`place.${where}`, { a: { charge: addedFaith } }));
+          else drp.push(m("drop.charge", { a: { charge: addedFaith } }));
         }
         // a chief of the same liege inside his own grant would say it twice
         if (escutcheonSafe(fam) && !fam.chief?.of && !fam.canton?.of) {
@@ -699,7 +749,10 @@ export function generate(a: Answers): Result {
           grants.push({ base, v, weight: busy(fam) });
         }
       }
-      variants.forEach((v, i) =>
+      // impaled coats only for the first two layouts that have one: on every layout they would
+      // crowd the others out of the list
+      const kept = variants.filter((v) => !v.impaled || impaledLeft-- > 0);
+      kept.forEach((v, i) =>
         out.push({ id: `${base.id}#${i}`, name: layoutName(base, v.arms), label: v.label, arms: v.arms, dropped: v.dropped, style: base.style }),
       );
     }
@@ -723,12 +776,14 @@ export function generate(a: Answers): Result {
     if (t) c.warnings = [m(t.p.to === undefined ? "warn.realmArms" : "warn.realmArmsUntil", { r: { realm: t.id }, y: t.p.from, z: t.p.to ?? 0 })];
   }
 
-  // drop anything illegal (should never happen; tests enforce it), and duplicates
+  // drop anything illegal (should never happen; tests enforce it), and duplicates; a pair against
+  // the rule of tincture is the player's own choice (armes à enquérir), so its arms stay
+  const legalPalette = contrasts(C, F);
   const seen = new Set<string>();
   candidates = candidates.filter((c) => {
     const sig = signature(c.arms);
     // with the rules switched off, arms that break the rule of tincture stay
-    if (seen.has(sig) || (!a.free && checkArms(c.arms).some((i) => i.level === "error"))) return false;
+    if (seen.has(sig) || (legalPalette && checkArms(c.arms).some((i) => i.level === "error"))) return false;
     seen.add(sig);
     return true;
   });
@@ -773,7 +828,7 @@ function notesFor(a: Answers, notes: Note[], ctx: { liegeArms: Arms | null; clai
     double_eagle: "history", maiden_eagle: "history", chi_rho: "history", lion_st_mark: "history", jerusalem: "history", escallop: "history", fleur: "history",
     lion_axe: "history", lion_forked_crowned: "history", lion_sword_sabre: "history", lion_manuscript: "history", lion_passant_guardant: "history",
     eagle: "history", eagle_crowned: "history", griffin: "history", castle: "history", chalice: "history", crown: "history", keys_crossed: "history",
-    dolphin: "history", bear: "history",
+    dolphin: "history", bear: "history", cross_patriarchal_mount: "history",
     roundel: "heraldry", martlet: "heraldry", lion_sword: "heraldry",
   };
   for (const id of new Set([a.emblem, a.origin, a.faith])) if (special[id]) note(special[id], `note.charge.${id}`);
@@ -796,6 +851,26 @@ function notesFor(a: Answers, notes: Note[], ctx: { liegeArms: Arms | null; clai
   const q1 = arms?.quarterly?.q[0] ?? arms;
   if (q1?.chief?.of) note("heraldry", "note.capo", { r: { realm: a.liege } });
   if (q1?.canton?.of) note("heraldry", "note.augmentation", { r: { realm: a.liege } });
+  if (arms?.quarterly && arms.quarterly.q.length > 4) note("heraldry", `note.quarterly${arms.quarterly.q.length}`);
+  if (arms?.quarterly && isImpaled(arms.quarterly)) note("heraldry", "note.impaled");
+  // arms that break the rule of tincture: the player's own (with the rules off, or a detail
+  // colour), else a realm's borne as it is; English and French heralds have names for them
+  if (arms) {
+    const own = checkArms(arms)[0];
+    if (own) note("heraldry", "note.armesFausses", { top: own.p.top, under: own.p.under });
+    else {
+      // realm references are the only objects with nothing but an id (quarterly.of is a list of them)
+      const realms = [...new Set([...JSON.stringify(arms).matchAll(/\{"id":"(\w+)"\}/g)].map((x) => x[1]))];
+      for (const id of realms) {
+        const r = realmAt(id, a.year, a.free);
+        const breach = "arms" in r ? checkArms(unmarked(r.arms))[0] : undefined;
+        if (breach) {
+          note("heraldry", id === "jerusalem" ? "note.armesAEnquerirJerusalem" : "note.armesAEnquerir", { r: { realm: id }, top: breach.p.top, under: breach.p.under });
+          break;
+        }
+      }
+    }
+  }
   if (arms?.granted) note("heraldry", "note.grant", { r: { realm: a.liege } });
   if (a.cadency !== "none") note("heraldry", a.cadency === "baton" ? "note.baton" : a.cadency === "label" ? "note.label" : "note.cadencyMarks");
   if (ctx.F === "ermine") note("heraldry", "note.ermine");

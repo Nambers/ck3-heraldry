@@ -2,10 +2,11 @@
 // came from — the table under the result. Built by reading the arms back, so
 // it only lists what is actually on the shield.
 
-import type { Arms, Charge, ChargeId } from "../heraldry/ast.ts";
+import type { Arms, Charge, ChargeId, OrdinaryKind } from "../heraldry/ast.ts";
 import { firstTincture, isEscutcheon } from "../heraldry/ast.ts";
 import type { Tincture } from "../heraldry/tincture.ts";
 import { parseGeom, type Answers } from "./answers.ts";
+import { DIMINISHES } from "./questions.ts";
 import type { Cat, LegendRow, Msg, Param } from "../designer/types.ts";
 
 // life: liege, titles, claims, deeds, place in the family; choice: symbols the
@@ -102,7 +103,8 @@ export function legend(a: Answers, arms: Arms, s: Sources): LegendRow[] {
     }
     if (f.ordinary) {
       const k = f.ordinary.kind;
-      const [cat, means] = geometry(geom.ord === k || (k === "fess" && geom.ord === "bars") || (k === "chevron" && geom.ord === "chevronels"));
+      // a chosen diminutive becomes the ordinary it diminishes when there are charges
+      const [cat, means] = geometry(geom.ord === k || DIMINISHES[geom.ord as OrdinaryKind] === k);
       add(cat, m("legend.what.ord", { o: { ord: k } }), means);
       if (f.ordinary.on) charge(f.ordinary.on);
     }

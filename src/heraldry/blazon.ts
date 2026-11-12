@@ -41,7 +41,11 @@ const ARMED_WORD: Record<string, string> = { stag: "attired", bull: "horned", sw
 function chargeEn(c: Charge, n: number = c.count ?? 1, withT = true): string {
   const def = CHARGES[c.id];
   let s: string;
-  if (c.id === "roundel" && ROUNDEL[c.t]) {
+  if (c.id === "cross_patriarchal_mount") {
+    // the hills have their own tincture: "a patriarchal cross argent issuing from a trimount vert"
+    const hills = withT && c.second ? ` ${tw(c.second)}` : "";
+    s = n === 1 ? `a patriarchal cross${withT ? ` ${tw(c.t)}` : ""} issuing from a trimount${hills}` : `${NUM[n]} patriarchal crosses${withT ? ` ${tw(c.t)}` : ""} issuing from trimounts${hills}`;
+  } else if (c.id === "roundel" && ROUNDEL[c.t]) {
     const [one, many] = ROUNDEL[c.t]!;
     s = n === 1 ? `${article(one)} ${one}` : `${NUM[n]} ${many}`;
     if (n === 3 && c.count === 3 && c.arr) s += ` in ${c.arr}`;
@@ -86,6 +90,9 @@ const ORDINARY: Record<OrdinaryKind, string> = {
   fess: "a fess", pale: "a pale", bend: "a bend", bend_sinister: "a bend sinister", chevron: "a chevron", saltire: "a saltire",
   cross: "a cross", pile: "a pile", orle: "an orle", tressure: "a double tressure flory counter-flory", pallets: "four pallets",
   bars: "two bars", chevronels: "three chevronels", pall: "a pall",
+  bars3: "three bars", gemel: "two bars gemel", barrulets: "six barrulets", pales3: "three pallets",
+  bends2: "two bends", bends3: "three bendlets", bends4: "four bendlets", bends5: "five bendlets",
+  chevrons2: "two chevrons", fess_chevrons: "a fess between two chevrons",
 };
 /** "a cross engrailed": the line follows the ordinary's name */
 const ordEn = (o: { kind: OrdinaryKind; line?: string }) => ORDINARY[o.kind] + (o.line ? ` ${o.line}` : "");
@@ -133,9 +140,14 @@ export function blazon(arms: Arms): string {
     else tail.push(`in chief ${chargeEn({ id: b.kind, t: b.t })} for difference`);
   }
   if (arms.overall) tail.push(`over all an escutcheon${arms.overall.of ? ` of ${realmEn(arms.overall.of.id)}` : arms.overall.own ? " of the family arms" : ""} (${blazon(arms.overall.arms)})`);
+  if (arms.quarterly && arms.quarterly.q.length === 2) {
+    const [d, s] = arms.quarterly.q.map((q, i) => `${blazon(q)}${arms.quarterly!.of?.[i] ? ` (for ${realmEn(arms.quarterly!.of[i]!.id)})` : ""}`);
+    return [`Per pale: dexter, ${d}; sinister, ${s}`, ...tail].join("; ");
+  }
   if (arms.quarterly) {
     const parts = groupQuarters(arms).map((g) => `${g.n.join(" and ")}, ${blazon(g.arms)}${g.of ? ` (for ${realmEn(g.of.id)})` : ""}`);
-    return [`Quarterly: ${parts.join("; ")}`, ...tail].join("; ");
+    const n = arms.quarterly.q.length;
+    return [`Quarterly${n === 4 ? "" : ` of ${n === 6 ? "six" : "eight"}`}: ${parts.join("; ")}`, ...tail].join("; ");
   }
   const main: string[] = [];
   const o = arms.ordinary;

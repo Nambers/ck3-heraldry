@@ -101,7 +101,7 @@
     },
     "mini": "Back to the arms",
     "free": "Ignore historical accuracy",
-    "freeHint": "Lifts the limits of period, rank and the rule of tincture: every realm in every year, any title, any colours. CK3's technical limits (small shields, no overlaps, four quarters at most) still apply.",
+    "freeHint": "Lifts only the limits of the period: every year gets the nearest realm arms, without remark, and the later practices (impalement, six or eight quarters) work in any year. Titles above your rank and colours against the rule of tincture need no switch: open them under their questions.",
     "nav": {
       "home": "Home",
       "west": "Western rulers",
@@ -137,8 +137,10 @@
     },
     "titles": {
       "title": "Which titles do you hold now?",
-      "mech": "Arms of dominion: the arms of held titles are quartered into the shield. Only titles a {rank} can hold are listed (that tier or below); up to {n}, picked in order of importance — skip titles that are not listed.",
+      "mech": "Arms of dominion: the arms of the titles you hold are quartered into your shield. The titles a {rank} may hold (the same tier or below) come first, the higher ones are folded away below; at most {n}, in order of importance. Leave out any that are not listed.",
       "full": "At most {n}",
+      "above": "Titles above your rank",
+      "aboveMech": "In CK3 your rank is your highest title: holding a higher one raises you to it. You can still pick these; the arms marshal them all the same, and the result says so.",
       "noneAtRank": "No titles a {rank} can hold are listed yet; skip this question."
     },
     "emblem": {
@@ -200,9 +202,10 @@
     },
     "palette": {
       "title": "Colours",
-      "mech": "Left: field, right: charges. Heraldry's one hard rule: metal (gold, silver) must not touch metal, nor colour colour — so only legal pairs are listed",
+      "mech": "Left: field, right: charges. Heraldry's one hard rule: metal (gold, silver) must not touch metal, nor colour colour. The legal pairs come first; those against the rule are folded away below.",
       "liege": "The liege's colours",
       "illegal": "Pairs that break the rule of tincture",
+      "illegalMech": "Arms against the rule of tincture exist but are rare: English and French heralds call them armes fausses (false arms) or armes à enquérir (arms of inquiry), a breach being an invitation to ask how it came about; the best known are Jerusalem's, gold on silver. With a pair from here the arms keep the breach, and the result says so.",
       "third": "Third",
       "thirdMech": "Where arms need one more tincture: a chief, canton or escutcheon on a striped field, a chief or ordinary on vair; the cadency mark takes it too where it can. Automatic by default. Whatever lies on it takes whichever of the pair contrasts with it, so the arms stay legal."
     },
@@ -535,6 +538,10 @@
       "n": "patriarchal cross",
       "p": "patriarchal crosses"
     },
+    "cross_patriarchal_mount": {
+      "n": "patriarchal cross on a trimount",
+      "p": "patriarchal crosses on trimounts"
+    },
     "jerusalem": {
       "n": "Jerusalem cross",
       "p": "Jerusalem crosses"
@@ -586,10 +593,21 @@
     "pallets": "pallets",
     "bars": "two bars",
     "chevronels": "three chevronels",
+    "bars3": "three bars",
+    "gemel": "two bars gemel",
+    "barrulets": "six barrulets",
+    "pales3": "three pallets",
+    "bends2": "two bends",
+    "bends3": "three bendlets",
+    "bends4": "four bendlets",
+    "bends5": "five bendlets",
+    "chevrons2": "two chevrons",
+    "fess_chevrons": "a fess between two chevrons",
     "pall": "pall"
   },
   "layout": {
     "single": "{a} in the centre",
+    "one": "one large {a} in the centre",
     "between": "a {o} with {a} around it",
     "on": "three {a} on a {o}",
     "orle": "{a} within an orle",
@@ -624,9 +642,11 @@
     "claimBreast": "a shield of {r} on the eagle's breast",
     "claimOverall": "a shield of {r} in the centre",
     "claimQuarterly": "quartered with {r}",
+    "claimImpaled": "impaled with {r} ({r} on the dexter)",
     "dominion": "arms of {r} (held)",
     "surtout": "family arms en surtout",
     "ownQuarter": "family arms after the realms",
+    "impaled": "the two coats impaled",
     "imperial": "family arms on the imperial eagle's breast",
     "grant": "a new coat granted by {r}, family arms en surtout"
   },
@@ -686,12 +706,24 @@
     "cantonOf": "a canton of augmentation of {r} ({arms})",
     "overall": "over everything, a small shield{of}: {arms}",
     "quarterly": "Quartered. {parts}",
+    "impaled": "Impaled. {parts}",
+    "quarterly6": "Quartered in six, two rows of three. {parts}",
+    "quarterly8": "Quartered in eight, two rows of four. {parts}",
     "quarter": "{n}{of}: {arms}",
+    "half": "{side}{of}: {arms}",
+    "side": {
+      "dexter": "Dexter half",
+      "sinister": "Sinister half"
+    },
     "qnum": {
       "1": "1st",
       "2": "2nd",
       "3": "3rd",
-      "4": "4th"
+      "4": "4th",
+      "5": "5th",
+      "6": "6th",
+      "7": "7th",
+      "8": "8th"
     },
     "qand": " and ",
     "brisure": {
@@ -710,6 +742,7 @@
       "book": "holding a {t} book",
       "plates": "each with five {t} roundels",
       "keys": "one {a}, one {b}",
+      "mount": "the trimount {t}",
       "nimbed": "with {t} haloes"
     },
     "ofFamily": " (the family arms)",
@@ -721,7 +754,17 @@
       "bend": ", along a diagonal"
     },
     "bars": "two {t} bars",
-    "chevronels": "three {t} chevronels"
+    "chevronels": "three {t} chevronels",
+    "bars3": "three {t} bars",
+    "gemel": "two {t} bars gemel",
+    "barrulets": "six {t} barrulets",
+    "pales3": "three {t} pallets",
+    "bends2": "two {t} bends",
+    "bends3": "three {t} bendlets",
+    "bends4": "four {t} bendlets",
+    "bends5": "five {t} bendlets",
+    "chevrons2": "two {t} chevrons",
+    "fess_chevrons": "a {t} fess between two {t} chevrons"
   },
   "note": {
     "preHeraldic": "Heraldry appears in western Europe only around the mid-12th century. A family before 1150 strictly had no arms; these are made \"as if\".",
@@ -732,6 +775,12 @@
     "exempt": "The arms of {r} put a gold cross on silver, breaking the rule of tincture on purpose — heraldry's most famous exception.",
     "capo": "A chief bearing the liege's arms is an Italian custom (capo): Ghibellines often bore the \"chief of the Empire\", Guelphs the chief of Anjou.",
     "augmentation": "A ruler granting his arms, or part of them, to a deserving family — on a canton or a chief — is an augmentation of honour.",
+    "quarterly6": "More than four quarters only appears in the 1430s: from 1435 René of Anjou bore six, three kingdoms above and three duchies below. With an odd number of coats the first is repeated in the last quarter, as three coats go 1 and 4 / 2 / 3.",
+    "quarterly8": "No quarterly of eight has been found before 1453, so it appears only with \"Ignore historical accuracy\" ticked. With an odd number of coats the first is repeated in the last quarter.",
+    "impaled": "Impalement: two coats side by side, each in one half; the dexter (the bearer's right, the viewer's left) is the place of honour. In the Gelre Armorial (c. 1370–1414) it mostly joins a title and a family: the Aragonese counts of Urgell put Aragon on the dexter and Urgell on the sinister; Louis II of Anjou put the Jerusalem he claimed on the dexter and Anjou on the sinister. The 13th-century rolls have none, so it appears from 1370.",
+    "armesFausses": "These arms put {top} on {under}, against the rule of tincture. English and French heralds call such arms armes fausses (false arms) or armes à enquérir (arms of inquiry): a breach is taken as an invitation to ask how it came about. The best known are the arms of the Kingdom of Jerusalem, gold on silver.",
+    "armesAEnquerir": "The arms of {r} put {top} on {under}, against the rule of tincture; the site bears them as they are. Such arms are called armes à enquérir (arms of inquiry): a breach is taken as an invitation to ask how it came about. The arms of the Kingdom of Jerusalem, gold on silver, are the best-known example.",
+    "armesAEnquerirJerusalem": "The arms of the Kingdom of Jerusalem put gold on silver, against the rule of tincture; the site bears them as they are. They are the best-known armes à enquérir (arms of inquiry): a breach is taken as an invitation to ask how it came about.",
     "label": "The label is the most common cadency mark: in England the eldest son's while his father lives; on the Continent often a cadet line's, as Anjou's red label on France.",
     "cadencyMarks": "Marking the second, third, fourth and fifth sons with a crescent, mullet, martlet and annulet is English, and only became systematic in the late 15th century.",
     "baton": "The baton sinister later became the mark of English royal bastards. Medieval marks of illegitimacy varied; this is the best known. It lies over everything by design.",
@@ -762,7 +811,8 @@
       "crown": "Three gold crowns are the arms of Sweden, from the mid-14th century.",
       "keys_crossed": "The crossed keys are Saint Peter's, the pope's power to bind and loose; the papal arms bear a gold and a silver key on red from about 1300.",
       "dolphin": "The dolphin is the canting arms of the lords of the Dauphiné; when the Dauphiné passed to France in 1349, the French heir took the title Dauphin from it.",
-      "bear": "Bears appear in canting arms, most famously Bern (Bern, Bär \"bear\")."
+      "bear": "Bears appear in canting arms, most famously Bern (Bern, Bär \"bear\").",
+      "cross_patriarchal_mount": "Hungary's double cross standing on three hills, as vanilla paints the kingdom of Hungary (a silver cross on red, green hills). Green on red is colour on colour, a well-known exception to the rule of tincture; the hills default to a colour clear of the field and the cross, and can be made green under “Detail colours”. The hills were added under the cross around the 14th century; earlier the double cross stood alone."
     },
     "anachronism": "{r} had no settled arms yet in your year; its arms from {y} are used instead, which is an anachronism.",
     "dominionLord": "Arms of dominion: a lord usually keeps the family arms in the 1st and 4th quarters and quarters the arms of held titles into the rest, most important first.",
@@ -778,7 +828,8 @@
     "pilgrimageRome": "Pilgrims to Rome brought home badges with St Peter's crossed keys (or the vernicle, Christ's face on Veronica's veil). Crossed keys in arms usually stand for the Church or St Peter; this borrows the association.",
     "pilgrimageJerusalem": "Pilgrims to Jerusalem were called palmers for the palm fronds they carried home; knights dubbed at the Holy Sepulchre used the Jerusalem cross as their sign. This borrows the association.",
     "pilgrimageFaith": "Holy places and pilgrims' badges depend on the faith: Orthodox pilgrims went to Jerusalem, Constantinople and Mount Athos; other faiths' holy places and emblem traditions are not covered yet.",
-    "free": "History and the rules are switched off: period, rank and the rule of tincture are not checked, so these arms may not be what the time would have produced."
+    "free": "The period is switched off: realm arms ignore the year and the later practices work in any year, so these arms may be anachronistic.",
+    "aboveRank": "{r} is above the rank you chose: in CK3 your rank is your highest title, so holding it would raise you to it. The arms marshal it all the same."
   },
   "warn": {
     "realmArms": "These are the arms of {r} (borne from {y}). If you are playing that very house or realm, they are its arms; otherwise two families in one land may not bear the same arms.",
@@ -879,7 +930,10 @@
     },
     "hungary": {
       "name": "Hungary",
-      "barry": "Hungary from about 1202: barry of red and silver (the Árpád stripes)."
+      "cross": "Hungary from Béla III (1172–1196): a silver patriarchal cross on red, on his arms and coins. After 1202 the stripes became the arms, the double cross still standing for the country.",
+      "barry": "Hungary from about 1202: barry of red and silver (the Árpád stripes).",
+      "anjou": "Hungary under the Angevins (1301–1382): the Árpád stripes impaling the lilies of France. The Gelre Armorial paints the first quarter of Louis I's arms so (barry of eight argent and gules; azure semé-de-lis Or).",
+      "barryLater": "After 1382 the Árpád stripes again. The later form, the stripes impaling the double cross on its hills, waits for a cited date."
     },
     "poland": {
       "name": "Poland",
@@ -960,6 +1014,7 @@
   },
   "lname": {
     "single": "Single charge",
+    "one": "One large charge",
     "three": "Three, two and one",
     "between": "{o} between",
     "on": "On a {o}",
@@ -977,6 +1032,9 @@
     "varied_canton": "{d} with canton and inescutcheon",
     "capo": "Capo (chief of the liege)",
     "quarterly": "Quarterly",
+    "impaled": "Impaled",
+    "quarterly6": "Quarterly of six",
+    "quarterly8": "Quarterly of eight",
     "plusOverall": "with an escutcheon over all",
     "plusBreast": "with a shield on the breast",
     "surtout": "Dominions, family en surtout",

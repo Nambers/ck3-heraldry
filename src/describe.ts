@@ -27,6 +27,7 @@ function chargePhrase(c: Charge, n: number = c.count ?? 1): string {
   }
   const attrs: string[] = [];
   if (id === "keys_crossed" && c.second) attrs.push(t("desc.attr.keys", { a: tadj(c.t), b: tadj(c.second) }));
+  if (id === "cross_patriarchal_mount" && c.second) attrs.push(t("desc.attr.mount", { t: tadj(c.second) }));
   if (c.crined) attrs.push(t("desc.attr.crined", { t: tadj(c.crined) }));
   if (c.crowned) attrs.push(t("desc.attr.crowned", { t: tadj(c.crowned) }));
   if (c.armed) attrs.push(t("desc.attr.armed", { t: tadj(c.armed) }));
@@ -50,9 +51,12 @@ function chargePhrase(c: Charge, n: number = c.count ?? 1): string {
 /** "弧齿边十字" / "cross engrailed" */
 export const lined = (name: string, line?: string) => (line ? t("desc.lined", { o: name, line: t(`line.${line}`) }) : name);
 
+const COUNTED = new Set<string>(["pallets", "bars", "chevronels", "bars3", "gemel", "barrulets", "pales3", "bends2", "bends3", "bends4", "bends5", "chevrons2", "fess_chevrons"]);
+
 function ordinaryPhrase(arms: Arms): string {
   const o = arms.ordinary!;
-  if (o.kind === "pallets" || o.kind === "bars" || o.kind === "chevronels") return t(`desc.${o.kind}`, { t: tadj(o.t) });
+  // counted ones say how many: "三道红色横条" / "three red bars"
+  if (COUNTED.has(o.kind)) return t(`desc.${o.kind}`, { t: tadj(o.t) });
   return t("desc.ordinary", { t: tadj(o.t), o: lined(t(`ord.${o.kind}`), o.line) });
 }
 
@@ -90,11 +94,18 @@ function cantonPhrase(arms: Arms): string {
 
 function describeInner(arms: Arms): string {
   const parts: string[] = [];
-  if (arms.quarterly) {
+  if (arms.quarterly && arms.quarterly.q.length === 2) {
+    const sides = arms.quarterly.q.map((q, i) => {
+      const of = arms.quarterly!.of?.[i];
+      return t("desc.half", { side: t(`desc.side.${i ? "sinister" : "dexter"}`), arms: describeInner(q), of: of ? t("desc.of", { r: realmName(of.id) }) : "" });
+    });
+    parts.push(t("desc.impaled", { parts: sides.join(t("desc.sep2")) }));
+  } else if (arms.quarterly) {
     const qs = groupQuarters(arms).map((g) =>
       t("desc.quarter", { n: g.n.map((n) => t(`desc.qnum.${n}`)).join(t("desc.qand")), arms: describeInner(g.arms), of: g.of ? t("desc.of", { r: realmName(g.of.id) }) : "" }),
     );
-    parts.push(t("desc.quarterly", { parts: qs.join(t("desc.sep2")) }));
+    const n = arms.quarterly.q.length;
+    parts.push(t(n === 4 ? "desc.quarterly" : `desc.quarterly${n}`, { parts: qs.join(t("desc.sep2")) }));
   } else {
     const main: string[] = [];
     const o = arms.ordinary;

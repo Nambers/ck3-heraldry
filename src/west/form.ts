@@ -8,25 +8,29 @@ import type { Form } from "../designer/types.ts";
 import { CHARGES } from "../charges.ts";
 import { TINCTURE, TINCTURES, type Tincture } from "../heraldry/tincture.ts";
 import { t } from "../i18n/index.ts";
-import { RANKS, canHold, realmAt } from "../realms.ts";
-import { ALL_PALETTES, DEFAULT_ANSWERS, MAX_TITLES, PALETTES, geomString, paletteOf, parseGeom, parseParts, partsString, thirdOf, type Answers } from "./answers.ts";
+import { RANKS, holdable, realmAt } from "../realms.ts";
+import { ALL_PALETTES, DEFAULT_ANSWERS, PALETTES, maxTitles, geomString, paletteOf, parseGeom, parseParts, partsString, thirdOf, type Answers } from "./answers.ts";
 import { CADENCY, DEEDS, EMBLEM_FAMILIES, FAITH_CHARGES, GEOM, GEOM_KEYS, ORIGIN_GROUPS, PARTS, PART_ROLE, SECTIONS, STYLES, YEAR_PRESETS, familyOf, realmOptions, titleOptions, type Family, type GeomKey, type Part } from "./questions.ts";
 
 /** the family last opened in a two-level picker: it stays open while it holds the answer (the bell is in two families) */
 const openFamily: Record<"emblem" | "origin", string | null> = { emblem: null, origin: null };
 /** whether the detail colours under the palette are unfolded (they start folded) */
 let partsOpen = false;
+/**
+ * Folded groups the player opens to pick from: colour pairs against the rule of tincture,
+ * titles above the rank. They start folded unless the answer is one of them.
+ */
+const folds: Record<"palette" | "titles", boolean | null> = { palette: null, titles: null };
+const foldOpen = (k: "palette" | "titles", holds: boolean) => folds[k] ?? holds;
+/** a fold's toggle: like the detail colours' */
+const foldButton = (k: "palette" | "titles", label: string, open: boolean, n = 0) =>
+  `<button type="button" class="partstoggle" data-fold="${k}" aria-expanded="${open}"><span>${esc(label)}</span>${n ? `<b class="count">${n}</b>` : ""}</button>`;
 
 /** one answer changed: the new answers, with what that change implies for the others */
 export function setAnswer<K extends keyof Answers>(prev: Answers, k: K, v: Answers[K]): Answers {
   const a: Answers = { ...prev, [k]: v };
-  // a lower rank cannot hold the higher titles any more
-  if (k === "rank") a.titles = a.titles.filter((id) => canHold(v as Answers["rank"], id, a.free));
-  // switching the rules back on drops what they do not allow
-  if (k === "free" && !v) {
-    a.titles = a.titles.filter((id) => canHold(a.rank, id));
-    if (a.palette !== "liege" && !PALETTES.some(([f, c]) => `${f}/${c}` === a.palette)) a.palette = DEFAULT_ANSWERS.palette;
-  }
+  // an earlier year, or the period switched back on, may allow fewer titles (fewer quarters)
+  a.titles = a.titles.slice(0, maxTitles(a));
   if (k === "liege") {
     if (v !== "none" && prev.liege === "none" && prev.palette === DEFAULT_ANSWERS.palette) a.palette = "liege";
     if (v === "none") {
@@ -40,21 +44,35 @@ export function setAnswer<K extends keyof Answers>(prev: Answers, k: K, v: Answe
 /** add or remove a held title; null when it cannot be added */
 function toggleTitle(a: Answers, id: string): Answers | null {
   const has = a.titles.includes(id);
-  if (!has && (a.titles.length >= MAX_TITLES || !canHold(a.rank, id, a.free))) return null;
+  if (!has && (a.titles.length >= maxTitles(a) || !holdable(id))) return null;
   return setAnswer(a, "titles", has ? a.titles.filter((x) => x !== id) : [...a.titles, id]);
 }
 
 function titlePicker(a: Answers): string {
-  const full = a.titles.length >= MAX_TITLES;
+  const max = maxTitles(a);
+  const full = a.titles.length >= max;
   const groups = titleOptions(a.year, a.rank, a.free);
-  if (!groups.length) return `<p class="empty">${esc(t("q.titles.noneAtRank", { rank: t(`q.rank.opt.${a.rank}`).toLowerCase() }))}</p>`;
+  const above = titleOptions(a.year, a.rank, a.free, true);
+  const picked = above.flatMap((g) => g.realms).filter((r) => a.titles.includes(r.id)).length;
+  const open = foldOpen("titles", picked > 0);
+  let s = groups.length ? titleGroups(a, groups, max, full) : `<p class="empty">${esc(t("q.titles.noneAtRank", { rank: t(`q.rank.opt.${a.rank}`).toLowerCase() }))}</p>`;
+  // above the rank: CK3 would raise the rank to it, but the arms are marshalled all the same
+  if (above.length) {
+    s += `<div class="parts">${foldButton("titles", t("q.titles.above"), open, picked)}`;
+    if (open) s += `<div class="partsbody"><p class="mech">${esc(t("q.titles.aboveMech"))}</p>${titleGroups(a, above, max, full)}</div>`;
+    s += `</div>`;
+  }
+  return s;
+}
+
+function titleGroups(a: Answers, groups: ReturnType<typeof titleOptions>, max: number, full: boolean): string {
   let s = "";
   for (const g of groups) {
     s += `<div class="tgroup"><span class="glabel">${esc(t(`region.${g.region}`))}</span>`;
     for (const r of g.realms) {
       const at = a.titles.indexOf(r.id);
       const off = r.unavailable !== undefined || (full && at < 0);
-      const tip = r.unavailable ? fmt({ key: r.unavailable, p: { r: { realm: r.id } } }) : full && at < 0 ? t("q.titles.full", { n: MAX_TITLES }) : "";
+      const tip = r.unavailable ? fmt({ key: r.unavailable, p: { r: { realm: r.id } } }) : full && at < 0 ? t("q.titles.full", { n: max }) : "";
       s += `<button type="button" class="chip${at >= 0 ? " on" : ""}" data-toggle="titles" data-value="${r.id}"${off ? " disabled" : ""}${tip ? ` title="${esc(tip)}"` : ""}>${at >= 0 ? `<b class="ord">${at + 1}</b>` : ""}<span>${esc(realmName(r.id))}</span></button>`;
     }
     s += `</div>`;
@@ -103,15 +121,20 @@ function realmSelect(a: Answers, name: "liege" | "claim"): string {
 }
 
 function palettePicker(a: Answers): string {
+  const bg = (x: string) => (x === "ermine" ? `background:${TINCTURE.argent.svg} radial-gradient(${TINCTURE.sable.svg} 1.4px, transparent 1.6px) 0 0/7px 7px` : `background:${TINCTURE[x as keyof typeof TINCTURE].svg}`);
+  const swatch = ([f, c]: [string, string]) => {
+    const v = `${f}/${c}`;
+    return `<button type="button" class="sw${a.palette === v ? " on" : ""}" data-set="palette" data-value="${v}" title="${esc(t(`tinct.${f}`))} / ${esc(t(`tinct.${c}`))}"><span class="pair"><i style="${bg(f)}"></i><i style="${bg(c)}"></i></span></button>`;
+  };
   let sw = `<div class="swatches">`;
   if (a.liege !== "none") sw += `<button type="button" class="sw liege${a.palette === "liege" ? " on" : ""}" data-set="palette" data-value="liege"><span>${t("q.palette.liege")}</span></button>`;
-  // without the rules every pair is offered; the ones that break the rule of tincture come after a divider
-  for (const [i, [f, c]] of (a.free ? ALL_PALETTES : PALETTES).entries()) {
-    if (i === PALETTES.length) sw += `<span class="swdiv">${esc(t("q.palette.illegal"))}</span>`;
-    const v = `${f}/${c}`;
-    const bg = (x: string) => (x === "ermine" ? `background:${TINCTURE.argent.svg} radial-gradient(${TINCTURE.sable.svg} 1.4px, transparent 1.6px) 0 0/7px 7px` : `background:${TINCTURE[x as keyof typeof TINCTURE].svg}`);
-    sw += `<button type="button" class="sw${a.palette === v ? " on" : ""}" data-set="palette" data-value="${v}" title="${esc(t(`tinct.${f}`))} / ${esc(t(`tinct.${c}`))}"><span class="pair"><i style="${bg(f)}"></i><i style="${bg(c)}"></i></span></button>`;
-  }
+  sw += PALETTES.map(swatch).join("") + `</div>`;
+  // the pairs against the rule of tincture: real, but rare (armes à enquérir), so folded away
+  const illegal = ALL_PALETTES.slice(PALETTES.length);
+  const picked = illegal.some(([f, c]) => a.palette === `${f}/${c}`);
+  const open = foldOpen("palette", picked);
+  sw += `<div class="parts">${foldButton("palette", t("q.palette.illegal"), open, picked ? 1 : 0)}`;
+  if (open) sw += `<div class="partsbody"><p class="mech">${esc(t("q.palette.illegalMech"))}</p><div class="swatches">${illegal.map(swatch).join("")}</div></div>`;
   return sw + `</div>`;
 }
 
@@ -187,7 +210,7 @@ function render(a: Answers): string {
   q.liege = fieldset(t("q.liege.title"), t("q.liege.mech"), realmSelect(a, "liege"));
   q.rank = fieldset(t("q.rank.title"), t("q.rank.mech"), rankPicker(a));
   // without a rank there are no titles to hold: skip the question
-  if (a.rank !== "none" || a.free) q.titles = fieldset(t("q.titles.title"), t("q.titles.mech", { n: MAX_TITLES, rank: t(`q.rank.opt.${a.rank}`).toLowerCase() }), titlePicker(a));
+  q.titles = fieldset(t("q.titles.title"), t("q.titles.mech", { n: maxTitles(a), rank: t(`q.rank.opt.${a.rank}`).toLowerCase() }), titlePicker(a));
   q.claim = fieldset(t("q.claim.title"), t("q.claim.mech"), realmSelect(a, "claim"));
   q.deed = fieldset(t("q.deed.title"), t("q.deed.mech"), `<div class="opts">${DEEDS.map((d) => chip("deed", d, t(`q.deed.opt.${d}`), a.deed === d)).join("")}</div>`);
   q.cadency = fieldset(t("q.cadency.title"), t("q.cadency.mech"), `<div class="opts">${CADENCY.map((c) => chip("cadency", c, t(`q.cadency.opt.${c}`), a.cadency === c)).join("")}</div>`);
@@ -229,6 +252,11 @@ export const westForm: Form<Answers> = {
       return g.charges.includes(a[name]) ? "form" : setAnswer(a, name, g.charges[0]);
     }
     if (b.dataset.toggle === "titles") return toggleTitle(a, b.dataset.value!);
+    if (b.dataset.fold === "palette" || b.dataset.fold === "titles") {
+      const k = b.dataset.fold;
+      folds[k] = b.getAttribute("aria-expanded") !== "true";
+      return "form";
+    }
     if (b.dataset.partsToggle !== undefined) {
       partsOpen = !partsOpen;
       return "form";
@@ -248,5 +276,6 @@ export const westForm: Form<Answers> = {
   reset() {
     openFamily.emblem = openFamily.origin = null;
     partsOpen = false;
+    folds.palette = folds.titles = null;
   },
 };

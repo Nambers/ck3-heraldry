@@ -9,7 +9,7 @@ import { TINCTURE, type Tincture } from "../src/heraldry/tincture.ts";
 const args = process.argv.slice(2);
 const oi = args.indexOf("-o");
 const out = oi >= 0 ? args[oi + 1] : "out/art/grid.svg";
-const ids = args.filter((a, i) => a !== "-o" && i !== oi + 1);
+const ids = args.filter((a, i) => a !== "-o" && (oi < 0 || i !== oi + 1));
 const PAIRS: [Tincture, Tincture, Tincture][] = [["gules", "or", "azure"], ["azure", "argent", "gules"], ["argent", "sable", "or"], ["vert", "or", "gules"]];
 const T = 150, COLS = 8;
 let body = "";

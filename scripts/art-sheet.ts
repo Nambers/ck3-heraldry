@@ -11,7 +11,7 @@ import { TINCTURE, type Tincture } from "../src/heraldry/tincture.ts";
 const args = process.argv.slice(2);
 const oi = args.indexOf("-o");
 const out = oi >= 0 ? args[oi + 1] : "out/art/sheet.svg";
-const ids = args.filter((a, i) => a !== "-o" && i !== oi + 1);
+const ids = args.filter((a, i) => a !== "-o" && (oi < 0 || i !== oi + 1));
 
 const PAIRS: [Tincture, Tincture, Tincture][] = [
   ["gules", "or", "azure"], // field, body, armed
