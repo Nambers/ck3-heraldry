@@ -74,7 +74,7 @@ export const DEFAULT_ANSWERS: Answers = {
   geom: "",
 };
 
-/** after "start over": no charge chosen (the year and the colours always have a value) */
+/** a page without a design, and after "start over": no charge chosen (the year and the colours always have a value) */
 export const BLANK_ANSWERS: Answers = { ...DEFAULT_ANSWERS, emblem: "none", origin: "none" };
 
 /** every legal field/charge pair: one metal (or ermine), one colour */

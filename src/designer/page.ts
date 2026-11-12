@@ -70,8 +70,10 @@ export const designerView =
 
   // a plain link to the page (the navigation) brings back the design left here
   if (!fragment() && lastFragment.get(d.id)) history.replaceState(null, "", location.search + "#" + lastFragment.get(d.id));
+  /** the answers a fragment stands for: a page without one is blank, as after "start over" */
+  const answersOf = (h: string): A => (h ? d.decode(h) : { ...(d.blank ?? d.defaults) });
   let shown = fragment();
-  let answers: A = shown ? d.decode(shown) : { ...d.defaults };
+  let answers: A = answersOf(shown);
   let renderToken = 0;
   let last: Result | null = null;
   let lastDeleted: Saved | null = null;
@@ -524,12 +526,12 @@ export const designerView =
   });
   // start over; pushState (not replace) so the browser's Back button restores the old answers
   reset.addEventListener("click", () => {
-    answers = { ...(d.blank ?? d.defaults) };
-    // the blank answers go into the URL too (empty when they are the defaults), so a reload keeps them
+    answers = answersOf("");
+    // the blank answers go into the URL too, so a reload keeps them; a page already blank stays as it is
     shown = d.encode(answers);
     lastFragment.set(d.id, shown);
     d.form.reset?.();
-    if (fragment() !== shown) history.pushState(null, "", location.search + "#" + shown);
+    if (d.encode(answersOf(fragment())) !== shown) history.pushState(null, "", location.search + "#" + shown);
     render();
     window.scrollTo({ top: 0 });
   });
@@ -542,7 +544,7 @@ export const designerView =
     hash() {
       if (fragment() === shown) return;
       shown = fragment();
-      answers = shown ? d.decode(shown) : { ...d.defaults };
+      answers = answersOf(shown);
       lastFragment.set(d.id, shown);
       render();
     },

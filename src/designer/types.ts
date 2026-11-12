@@ -75,9 +75,9 @@ export interface Designer<A> {
   id: string;
   /** i18n key of the line under the title */
   intro: string;
-  /** answers on a first visit (a little to look at), and for whatever a link leaves out */
+  /** answers for whatever a link leaves out */
   defaults: A;
-  /** answers after "start over": nothing chosen (defaults when not given) */
+  /** answers on a page without a design and after "start over": nothing chosen (defaults when not given) */
   blank?: A;
   /** answers <-> the URL fragment (without "#"); a share link is just this */
   encode(a: A): string;
