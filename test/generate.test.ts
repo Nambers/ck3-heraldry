@@ -16,7 +16,7 @@ import { CADENCY, DEEDS, EMBLEM_FAMILIES, FAITH_CHARGES, GEOM, GEOM_KEYS, ORIGIN
 import { RANKS, REALM_IDS, canHold, holdable, type Rank } from "../src/realms.ts";
 import { renderSvg } from "../src/render/svg.ts";
 import { escutcheonSafe, layout } from "../src/layout.ts";
-import type { Arms } from "../src/heraldry/ast.ts";
+import { plain, type Arms } from "../src/heraldry/ast.ts";
 import { gamePath, inGame } from "./ck3-game.ts";
 
 // a deterministic sample of the whole answer space
@@ -478,6 +478,48 @@ describe("generator", () => {
         expect(checkArms(c.arms).filter((x) => x.level === "error"), `${c.id} ${JSON.stringify(a)}`).toEqual([]);
       }
     }
+  });
+
+  it("squeezes each half of an impaled coat sideways, as a whole shield", () => {
+    const lion: Arms = { field: plain("gules"), charges: [{ at: "center", charge: { id: "lion_rampant", t: "or" } }] };
+    const pale: Arms = { field: plain("azure"), ordinary: { kind: "pale", t: "argent" }, charges: [] };
+    const centreY = (ns: ReturnType<typeof layout>) => {
+      const c = ns.find((n) => n.type === "charge")!;
+      return c.box.y + c.box.h / 2;
+    };
+    for (const brisure of [undefined, { kind: "mullet", t: "argent" } as const]) {
+      const nodes = layout({ field: plain("gules"), charges: [], quarterly: { q: [lion, pale], of: [null, null] }, ...(brisure ? { brisure } : {}) });
+      // the pale runs from the top of the shield to its base, a cadency mark or not
+      const shape = nodes.find((n) => n.type === "shape")!;
+      expect([shape.box.y, shape.box.h]).toEqual([0, 1]);
+      // the lion stands at the fess point, not in the square at the top of its half
+      if (!brisure) expect(centreY(nodes)).toBeCloseTo(centreY(layout(lion)), 2);
+    }
+  });
+
+  it("keeps a small cadency mark off every ordinary, wherever the marshalling puts it", { timeout: 60_000 }, () => {
+    // ordinaries alone are rare in the random sample (no charge at all), so go through each
+    let kept = 0;
+    for (const ord of GEOM.ord)
+      for (const cadency of ["label", "crescent", "mullet"] as const)
+        for (const [claim, year] of [["none", 1300], ["scotland", 1300], ["scotland", 1420], ["aragon", 1420]] as const)
+          for (const emblem of ["none", "fleur"]) {
+            const a: Answers = { ...DEFAULT_ANSWERS, emblem, origin: "none", year, claim, cadency, geom: `ord:${ord}` };
+            for (const c of generate(a).candidates) {
+              expect(lintArms(c.arms), `${c.id} ${JSON.stringify(a)}`).toEqual([]);
+              if (c.arms.brisure && cadency !== "label") kept++;
+            }
+          }
+    // left off only where something is in the way
+    expect(kept).toBeGreaterThan(1000);
+  });
+
+  it("keeps an augmentation canton off an orle, where it would take the corner of the ring", () => {
+    const r = generate({ ...DEFAULT_ANSWERS, emblem: "lion_rampant", origin: "none", deed: "service", liege: "england", palette: "argent/gules" });
+    const byId = (id: string) => r.candidates.find((c) => c.id === id)!;
+    expect(byId("single#0").arms.canton?.of?.id).toBe("england");
+    expect(byId("orle#0").arms.canton).toBeUndefined();
+    expect(byId("orle#0").dropped.map((d) => d.key)).toContain("drop.augmentation");
   });
 
   it("keeps a quarterly coat inside a quarter apart from the shield's own quarters in the export", () => {

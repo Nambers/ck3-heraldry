@@ -8,7 +8,7 @@ import { CHARGES, TEX } from "../charges.ts";
 import { roleTinctures } from "../ck3/export.ts";
 import type { Arms } from "../heraldry/ast.ts";
 import { TINCTURE, type Tincture } from "../heraldry/tincture.ts";
-import { CHIEF_INDENTED, fretBands, layout, ORDINARY_POLYS, ordinaryPolys, vairBells, type Box, type LNode } from "../layout.ts";
+import { CHIEF_INDENTED, fretBands, layout, ORDINARY_POLYS, ordinaryPolys, RINGS, vairBells, type Box, type LNode } from "../layout.ts";
 
 const S = 100; // viewBox units per CK3 unit
 const n = (v: number) => +(v * S).toFixed(2);
@@ -218,16 +218,11 @@ function shape(node: Extract<LNode, { type: "shape" }>, ctx: Ctx): string {
       for (let i = 0; i < e.length; i += 2) s += rect(sub(b, e[i], -0.01, e[i + 1] - e[i], 1.02), c);
       return s;
     }
-    case "orle": {
-      const outer = escutcheonPath(sub(b, 0.188, 0.109, 0.624, 0.774));
-      const inner = escutcheonPath(sub(b, 0.273, 0.19, 0.454, 0.6));
-      return `<path d="${outer} ${inner}" fill="${c}" fill-rule="evenodd" ${OUTLINE}/>`;
-    }
-    case "tressure": {
-      const ring = (x: number, y: number, w: number, h: number, t: number) =>
-        `<path d="${escutcheonPath(sub(b, x, y, w, h))} ${escutcheonPath(sub(b, x + t, y + t, w - 2 * t, h - 2 * t * 1.15))}" fill="${c}" fill-rule="evenodd" ${OUTLINE}/>`;
-      return ring(0.12, 0.04, 0.76, 0.88, 0.025) + ring(0.17, 0.09, 0.66, 0.77, 0.025);
-    }
+    case "orle":
+    case "tressure":
+      return RINGS[node.kind]
+        .map(([o, i]) => `<path d="${escutcheonPath(sub(b, o.x, o.y, o.w, o.h))} ${escutcheonPath(sub(b, i.x, i.y, i.w, i.h))}" fill="${c}" fill-rule="evenodd" ${OUTLINE}/>`)
+        .join("");
     case "baton": {
       const w = 0.04;
       return poly(b, [[0.875 + w, 0.125 + w], [0.875 - w, 0.125 - w], [0.125 - w, 0.875 - w], [0.125 + w, 0.875 + w]].map(([x, y]) => [x, y] as [number, number]), c);

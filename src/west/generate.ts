@@ -13,6 +13,7 @@ import { checkArms, signature, unmarked } from "../heraldry/rules.ts";
 import { contrasts, isMetal, type Tincture } from "../heraldry/tincture.ts";
 import { opens } from "../heraldry/era.ts";
 import { ON, escutcheonSafe } from "../layout.ts";
+import { markCovers } from "../lint.ts";
 import { REALMS, REALM_IDS, canHold, holdable, realmAt, realmMainCharge, realmPalette, type Period } from "../realms.ts";
 import type { Candidate as BaseCandidate, Msg, Note, Param, Result as BaseResult } from "../designer/types.ts";
 import { defaultCrown } from "../ck3/export.ts";
@@ -655,7 +656,9 @@ export function generate(a: Answers): Result {
         if (!lc || !liegeArms) dropped.push(m("drop.augmentationNoLiege"));
         else {
           const [LF] = realmPalette(liegeArms);
-          if (arms.canton || arms.chief || arms.charges.some((p) => p.at === "dexter_chief" || p.at === "between") || !contrasts(LF, firstTincture(arms.field)) || arms.field.kind !== "plain") {
+          // a canton over an orle would take the corner of the ring the charge stands in
+          const ringed = arms.ordinary?.kind === "orle" || arms.ordinary?.kind === "tressure";
+          if (arms.canton || arms.chief || ringed || arms.charges.some((p) => p.at === "dexter_chief" || p.at === "between") || !contrasts(LF, firstTincture(arms.field)) || arms.field.kind !== "plain") {
             dropped.push(m("drop.augmentation"));
           } else {
             arms.canton = { t: LF, charge: { ...lc, count: 1 }, of: { id: a.liege } };
@@ -730,6 +733,12 @@ export function generate(a: Answers): Result {
         }
         const top = v.arms.quarterly ? null : v.arms.field.kind === "plain" ? v.arms.field.t : null;
         v.arms.brisure = { kind: a.cadency, t: contrasting(top, [F, C], third) };
+        // a small mark goes on the field: where an ordinary reaches its place (a pale, a cross; on
+        // a partition line, the inner corners of the quarters beside it) it is left off
+        if (a.cadency !== "label" && a.cadency !== "baton" && markCovers(v.arms)) {
+          delete v.arms.brisure;
+          v.dropped = [...v.dropped, m("drop.cadency", { b: a.cadency })];
+        }
       }
       // a grant: the liege gives a new coat made from his own charge, the family arms en surtout
       if (grant) {

@@ -2,8 +2,9 @@
 // lie on, or that are cut off by the edge of the shield. Measured on the same
 // layout nodes both renderers use, by sampling points inside each charge's box.
 
-import type { Arms } from "./heraldry/ast.ts";
-import { CHIEF_INDENTED, layout, ordinaryPolys, type Box, type LNode } from "./layout.ts";
+import { TEX } from "./charges.ts";
+import type { Arms, Line } from "./heraldry/ast.ts";
+import { CHIEF_INDENTED, clipToBox, layout, ordinaryPolys, RINGS, type Box, type LNode, type ShapeKind } from "./layout.ts";
 
 type Pt = [number, number];
 
@@ -50,6 +51,25 @@ function heater(b: Box): Pt[] {
   return [p(0, 0), p(1, 0), p(1, 0.45), ...bezier(p(1, 0.45), p(1, 0.75), p(0.75, 0.92), p(0.5, 1), 8), ...bezier(p(0.5, 1), p(0.25, 0.92), p(0, 0.75), p(0, 0.45), 8)];
 }
 
+/**
+ * What an ordinary covers, in 0..1 of its box: its polygons cut to the box (a texture draws
+ * nothing outside it, so the third of three chevronels stops at the foot of its quarter), the
+ * orle and the tressure as rings of quads between their outlines, the four pallets as bands.
+ */
+function footprint(kind: ShapeKind, line?: Line): Pt[][] {
+  if (kind === "orle" || kind === "tressure") {
+    return RINGS[kind].flatMap(([o, i]) => {
+      const a = heater(o), b = heater(i);
+      return a.map((p, k): Pt[] => [p, a[(k + 1) % a.length], b[(k + 1) % b.length], b[k]]);
+    });
+  }
+  if (kind === "pallets") {
+    const e = TEX.pallets4.edges;
+    return [0, 2, 4, 6].map((k): Pt[] => [[e[k], -0.01], [e[k + 1], -0.01], [e[k + 1], 1.01], [e[k], 1.01]]);
+  }
+  return ordinaryPolys(kind, line).map((p) => clipToBox(p)).filter((p) => p.length > 2);
+}
+
 /** points sampled inside the middle of a charge's box (charges rarely fill their corners) */
 function samples(b: Box, n = 9): Pt[] {
   const pts: Pt[] = [];
@@ -68,16 +88,21 @@ const inBox = (b: Box) => ([x, y]: Pt) => x >= b.x && x <= b.x + b.w && y >= b.y
 
 const LIMIT = { overlap: 0.08, region: 0.08, cut: 0.12 };
 
-function lintNodes(nodes: LNode[], outline: Pt[], issues: LintIssue[]) {
-  const charges = nodes.filter((n): n is Extract<LNode, { type: "charge" }> => n.type === "charge");
-  const field = charges.filter((c) => c.on === "field" || c.on === "brisure");
-  const name = (c: Extract<LNode, { type: "charge" }>) => `${c.charge.id}@${c.on}`;
+type ChargeNode = Extract<LNode, { type: "charge" }>;
+
+/** with `only`, just the issues of the charges it picks out (the others meet them only as obstacles) */
+function lintNodes(nodes: LNode[], outline: Pt[], issues: LintIssue[], only?: (c: ChargeNode) => boolean) {
+  const charges = nodes.filter((n): n is ChargeNode => n.type === "charge");
+  const mine = only ? charges.filter(only) : charges;
+  const field = mine.filter((c) => c.on === "field" || c.on === "brisure");
+  const name = (c: ChargeNode) => `${c.charge.id}@${c.on}`;
 
   // charges on the same surface must not overlap each other
   for (const group of ["field", "chief", "canton", "ordinary"] as const) {
     const g = charges.filter((c) => (group === "field" ? c.on === "field" || c.on === "brisure" : c.on === group));
     for (let i = 0; i < g.length; i++)
       for (let j = i + 1; j < g.length; j++) {
+        if (only && !only(g[i]) && !only(g[j])) continue;
         const a = samples(g[i].box), b = samples(g[j].box);
         const amount = Math.max(frac(a, inBox(g[j].box)), frac(b, inBox(g[i].box)));
         if (amount > LIMIT.overlap) issues.push({ kind: "charge-overlap", a: name(g[i]), b: name(g[j]), amount });
@@ -95,7 +120,7 @@ function lintNodes(nodes: LNode[], outline: Pt[], issues: LintIssue[]) {
         if (amount > LIMIT.region) issues.push({ kind, a: name(c), amount });
       }
       if (n.type === "shape" && n.kind !== "baton") {
-        const polys = ordinaryPolys(n.kind, n.line).map((poly) => poly.map(([x, y]): Pt => [n.box.x + x * n.box.w, n.box.y + y * n.box.h]));
+        const polys = footprint(n.kind, n.line).map((poly) => poly.map(([x, y]): Pt => [n.box.x + x * n.box.w, n.box.y + y * n.box.h]));
         const amount = frac(pts, (p) => polys.some((poly) => inPoly(p, poly)));
         if (amount > LIMIT.region) issues.push({ kind: "on-ordinary", a: name(c), b: n.kind, amount });
       }
@@ -125,16 +150,27 @@ function lintNodes(nodes: LNode[], outline: Pt[], issues: LintIssue[]) {
     }
   }
   // nothing but a semé may be cut off by the edge
-  for (const c of charges) {
+  for (const c of mine) {
     if (c.on === "semy") continue;
     const amount = frac(samples(c.box), (p) => !inPoly(p, outline));
     if (amount > LIMIT.cut) issues.push({ kind: "cut-off", a: name(c), amount });
   }
-  for (const n of nodes) if (n.type === "escutcheon") lintNodes(n.children, heater(n.box), issues);
+  for (const n of nodes) if (n.type === "escutcheon") lintNodes(n.children, heater(n.box), issues, only);
 }
 
 export function lintArms(arms: Arms): LintIssue[] {
   const issues: LintIssue[] = [];
   lintNodes(layout(arms), SHIELD, issues);
   return issues;
+}
+
+/**
+ * Does a small cadency mark (crescent, mullet, …) on these arms lie on anything but the field?
+ * Where it sits depends on the marshalling (on the partition line of two columns, inside the
+ * middle quarter of three), so the generator tries it on the laid-out arms instead of guessing.
+ */
+export function markCovers(arms: Arms): boolean {
+  const issues: LintIssue[] = [];
+  lintNodes(layout(arms), SHIELD, issues, (c) => c.on === "brisure");
+  return issues.length > 0;
 }

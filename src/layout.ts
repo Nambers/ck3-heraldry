@@ -126,6 +126,14 @@ export const ORDINARY_POLYS: Partial<Record<ShapeKind, Pt[][]>> = {
 };
 export const CANTON = { w: 0.4, h: 0.38 };
 
+/** a heater-shaped ring: the outline at (x, y, w, h) and one `t` inside it (a heater is narrower below) */
+const ring = (x: number, y: number, w: number, h: number, t: number): [Box, Box] => [{ x, y, w, h }, { x: x + t, y: y + t, w: w - 2 * t, h: h - 2 * t * 1.15 }];
+/** the orle and the double tressure as heater-shaped rings, [outer, inner] in 0..1 of their box */
+export const RINGS: Record<"orle" | "tressure", [Box, Box][]> = {
+  orle: [[{ x: 0.188, y: 0.109, w: 0.624, h: 0.774 }, { x: 0.273, y: 0.19, w: 0.454, h: 0.6 }]],
+  tressure: [ring(0.12, 0.04, 0.76, 0.88, 0.025), ring(0.17, 0.09, 0.66, 0.77, 0.025)],
+};
+
 /** a polygon cut to the box (Sutherland–Hodgman against x, y in [lo, hi]) */
 export function clipToBox(pts: Pt[], lo = -0.01, hi = 1.01): Pt[] {
   const edges: [(p: Pt) => boolean, (a: Pt, b: Pt) => Pt][] = [0, 1].flatMap((axis) =>
@@ -387,6 +395,18 @@ function fitInto(cx: number, cy: number, size: number, r: Box): [number, number,
   return [clamp(cx, r.x + m + s / 2, r.x + r.w - m - s / 2), clamp(cy, r.y + m + s / 2, r.y + r.h - m - s / 2), s];
 }
 
+/** how much a box must shrink about (cx, cy), a point inside it, to lie within r: 1 if it already does */
+function shrinkInto(b: Box, cx: number, cy: number, r: Box): number {
+  const k = Math.min(
+    1,
+    (cx - r.x) / (cx - b.x),
+    (r.x + r.w - cx) / (b.x + b.w - cx),
+    (cy - r.y) / (cy - b.y),
+    (r.y + r.h - cy) / (b.y + b.h - cy),
+  );
+  return Math.max(k, 0);
+}
+
 /** tincture directly beneath a spot */
 function underAt(at: Spot, arms: Arms): Tincture {
   const f = arms.field;
@@ -441,6 +461,12 @@ interface Opts {
    * background (as in a quarter of four, six or eight, which are too narrow to split again)
    */
   tile?: boolean;
+  /**
+   * half of a coat impaled across the whole shield: a whole coat squeezed sideways, so its
+   * ordinaries, chief and canton fill the half from top to base as on a whole shield, and only
+   * the charges keep to the content area (below a cadency mark)
+   */
+  whole?: boolean;
   /** the outline this coat lies in: the whole shield unless on an escutcheon */
   frame?: Frame;
 }
@@ -547,8 +573,12 @@ function layoutInside(arms: Arms, box: Box, opts: Opts = {}): LNode[] {
     // the brisure band, or below the top of the impaled half it is tiled into; an escutcheon
     // over all takes the middle, so the charges keep to the biggest part beside it
     const floor = tile ? opts.content!.y : box.y + (band ? band[1] * box.h : 0);
+    // the halves of a coat impaled across the whole height are each a whole coat squeezed
+    // sideways (impalement, not dimidiation): ordinaries run the whole half and charges stand
+    // at the fess point, not in the square at its top
+    const whole = rows === 1 && !nested;
     let content = q.map((c) => {
-      const s = insideShield(c, opts.frame ?? SHIELD_FRAME);
+      const s = whole ? c : insideShield(c, opts.frame ?? SHIELD_FRAME);
       const cut = Math.max(0, floor - s.y);
       return { ...s, y: s.y + cut, h: s.h - cut };
     });
@@ -560,7 +590,7 @@ function layoutInside(arms: Arms, box: Box, opts: Opts = {}): LNode[] {
     // inside another quarter, the tags carry its own: the export skips the whole shield's q1 and q4
     const tag = (i: number) => (bgTag === "root" ? `q${i + 1}` : `${bgTag}-q${i + 1}`);
     qs.forEach((a, i) =>
-      out.push(...layoutInside(a, q[i], { bg: tag(i), content: content[i], lower: atBase && (rows === 1 || i >= cols), tile: rows === 1, frame: opts.frame })),
+      out.push(...layoutInside(a, q[i], { bg: tag(i), content: content[i], lower: atBase && (rows === 1 || i >= cols), tile: rows === 1, whole, frame: opts.frame })),
     );
   } else {
     const f = arms.field;
@@ -578,7 +608,7 @@ function layoutInside(arms: Arms, box: Box, opts: Opts = {}): LNode[] {
     if (band) content = below(content, box.y + band[1] * box.h);
 
     const o = arms.ordinary;
-    const geo = opts.lower && opts.content ? opts.content : box;
+    const geo = opts.lower && opts.content && !opts.whole ? opts.content : box;
     if (o) {
       out.push({ type: "shape", kind: o.kind, box: geo, t: o.t, ...(o.line ? { line: o.line } : {}) });
       const on = ON[o.kind];
@@ -601,8 +631,14 @@ function layoutInside(arms: Arms, box: Box, opts: Opts = {}): LNode[] {
       out.push({ type: "rect", box: cb, t: arms.canton.t });
       if (arms.canton.charge) placeCharge(out, { ...arms.canton.charge, count: 1 }, ...rel(cb, 0.5, 0.5), cb.h * 0.72, arms.canton.t, "canton");
     }
+    // inside an orle or tressure the charge keeps to the ring: placed in the ring's box as on a
+    // whole shield, then shrunk about that point until it clears what took part of the field (a
+    // chief, a cadency mark, an escutcheon over all). Shrunk about its centre it stays inside the
+    // outline it has on a whole shield, so it never slides onto the ring.
+    const ringed = !!o && (o.kind === "orle" || o.kind === "tressure");
     for (const p of arms.charges) {
-      const area = p.at === "between" ? geo : content;
+      const inRing = ringed && p.at === "center";
+      const area = p.at === "between" || inRing ? geo : content;
       const esc = arms.overall ? escutcheonBox(...rel(box, 0.5, 0.56), box.w * 0.34) : undefined;
       const half = halfOf(p.at, f, box, area, opts.frame ?? SHIELD_FRAME, esc);
       for (const [rx, ry, s] of spotGeometry(p, arms)) {
@@ -610,7 +646,8 @@ function layoutInside(arms: Arms, box: Box, opts: Opts = {}): LNode[] {
         let [cx0, cy0] = rel(area, rx, ry);
         // each in the middle of its half across: per pale as far from the line, per fess one above the other
         if (half) cx0 = half.x + half.w / 2;
-        const [cx, cy, size] = half ? fitInto(cx0, cy0, s * minDim(area), half) : [cx0, cy0, s * minDim(area)];
+        const [cx, cy, s0] = half ? fitInto(cx0, cy0, s * minDim(area), half) : [cx0, cy0, s * minDim(area)];
+        const size = inRing ? s0 * shrinkInto(chargeBox(c, cx, cy, s0), cx, cy, content) : s0;
         placeCharge(out, c, cx, cy, size, p.at === "between" ? fieldUnder : underAt(p.at, arms));
       }
     }
